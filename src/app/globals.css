@@ -1,0 +1,211 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #E23744;
+  --color-primary-soft: rgba(226, 55, 68, 0.08);
+  --color-primary-dark: #CB202D;
+
+  --color-secondary: #1C1C1C;
+  --color-secondary-soft: #F4F4F4;
+
+  --color-accent: #EF4F5F;
+
+  /* Dynamic Surface Colors - These will react to .dark class */
+  --color-surface-50: var(--surface-50);
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+  --color-surface-300: var(--surface-300);
+  --color-surface-400: var(--surface-400);
+  --color-surface-500: var(--surface-500);
+  --color-surface-900: var(--surface-900);
+
+  --color-contrast-bg: var(--contrast-bg);
+  --color-contrast-text: var(--contrast-text);
+
+  --radius-xl: 18px;
+  --radius-2xl: 28px;
+  --radius-3xl: 36px;
+
+  --shadow-premium: 0 4px 15px -3px rgba(0, 0, 0, 0.04);
+  --shadow-elevated: 0 15px 30px -8px rgba(0, 0, 0, 0.08);
+  --shadow-accent: 0 8px 20px -5px rgba(226, 55, 68, 0.2);
+}
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #1C1C1C;
+  --primary: #E23744;
+  --surface-muted: #64748B;
+  --card-bg: #FFFFFF;
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --nav-bg: rgba(255, 255, 255, 0.7);
+
+  /* Surface Scale */
+  --surface-50: #FFFFFF;
+  --surface-100: #F4F4F4;
+  --surface-200: #E8E8E8;
+  --surface-300: #D1D1D1;
+  --surface-400: #9D9D9D;
+  --surface-500: #696969;
+  --surface-900: #1C1C1C;
+
+  /* Contrast Pairs */
+  --contrast-bg: #1C1C1C;
+  --contrast-text: #FFFFFF;
+}
+
+.dark {
+  --background: #0A0A0A;
+  --foreground: #F4F4F4;
+  --card-bg: #141414;
+  --surface-muted: #A0A0A0;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --nav-bg: rgba(10, 10, 10, 0.8);
+
+  /* Surface Scale flipped for dark mode — pure neutral */
+  --surface-50: #141414;
+  --surface-100: #1C1C1C;
+  --surface-200: #2A2A2A;
+  --surface-300: #525252;
+  --surface-400: #787878;
+  --surface-500: #A0A0A0;
+  --surface-900: #F5F5F5;
+
+  /* Contrast Pairs */
+  --contrast-bg: #1C1C1C;
+  --contrast-text: #F5F5F5;
+}
+
+/* Custom transitions for theme switching */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.15s ease, box-shadow 0.3s ease;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Base Responsive Container */
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background);
+}
+
+/* Modern Component Overrides */
+.card-premium {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-premium);
+  border: 1px solid var(--border-subtle);
+}
+
+.card-elevated {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-elevated);
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  padding: 0.85rem 1.75rem;
+  border-radius: var(--radius-xl);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: var(--shadow-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 0.8rem;
+}
+
+.btn-primary:active {
+  transform: scale(0.96);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-soft);
+  color: var(--foreground);
+  padding: 0.85rem 1.75rem;
+  border-radius: var(--radius-xl);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 0.8rem;
+}
+
+.dark .btn-secondary {
+  background-color: #1C1C1C;
+}
+
+.text-muted {
+  color: var(--surface-muted);
+}
+
+.nav-blur {
+  background-color: var(--nav-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass {
+  background: rgba(20, 20, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06);
+}
+
+.dark .glass-card {
+  background: rgba(20, 20, 20, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-200);
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--surface-100);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
