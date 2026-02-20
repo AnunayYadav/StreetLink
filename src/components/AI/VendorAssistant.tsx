@@ -167,9 +167,11 @@ export default function VendorAssistant() {
 
     // ─── Quick-action chips for first-time users ───
     const quickActions = [
-        "How to register my shop?",
-        "Help me add products",
-        "How does payment work?",
+        "🏪 How to register my shop?",
+        "📦 Help me add products",
+        "💳 How does QR payment work?",
+        "🔗 How to share my shop?",
+        "🌐 How to change language?",
     ];
 
     return (
