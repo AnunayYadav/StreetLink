@@ -143,6 +143,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [supabase, fetchProfile, router]);
 
     const signup = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+        if (!isSupabaseConfigured()) {
+            return { success: false, error: "Supabase is not configured. Please add your URL and Key to .env.local" };
+        }
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -158,6 +161,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [supabase]);
 
     const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+        if (!isSupabaseConfigured()) {
+            return { success: false, error: "Supabase is not configured. Please add your URL and Key to .env.local" };
+        }
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,

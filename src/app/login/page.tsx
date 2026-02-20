@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/context/auth-context";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
 
 import { Suspense } from "react";
 
@@ -183,6 +184,17 @@ function LoginContent() {
                                 </p>
                             </motion.div>
                         </AnimatePresence>
+
+                        {!isSupabaseConfigured() && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-600 text-[10px] font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+                            >
+                                <AlertCircle size={14} />
+                                Backend Not Configured - Keys Missing
+                            </motion.div>
+                        )}
                     </motion.div>
 
                     {/* Form */}
