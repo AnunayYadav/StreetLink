@@ -49,7 +49,7 @@ export default function OnboardingPage() {
     const { t } = useLanguage();
     const router = useRouter();
     const categories = getCategories(t);
-    const { isLoggedIn, isGuest, user, isLoading } = useAuth();
+    const { isLoggedIn, isGuest, user, isLoading, refreshProfile } = useAuth();
     const [step, setStep] = useState(1);
     const [direction, setDirection] = useState(0);
     const [shopNameError, setShopNameError] = useState("");
@@ -230,7 +230,10 @@ export default function OnboardingPage() {
 
             if (roleError) throw roleError;
 
-            // 3. Success
+            // 3. Refresh profile to update role and merchantProfile in context
+            await refreshProfile();
+
+            // 4. Success
             router.push('/dashboard');
         } catch (error: any) {
             console.error("Launch error:", error);

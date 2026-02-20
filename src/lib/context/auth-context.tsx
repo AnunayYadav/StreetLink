@@ -94,7 +94,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             if (!activeProfile) {
-                console.error("Could not obtain a profile for user:", userId);
+                console.warn("Could not obtain a profile for user, using session fallback:", userId);
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    const fallbackRole = (session.user.user_metadata?.role as UserRole) || 'user';
+                    setRole(fallbackRole);
+                    setUser({
+                        id: session.user.id,
+                        name: session.user.user_metadata?.full_name || 'User',
+                        email: session.user.email || '',
+                        role: fallbackRole,
+                        createdAt: new Date().toISOString()
+                    });
+                }
                 return;
             }
 
@@ -163,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session) {
+                setIsLoading(true);
                 await fetchProfile(session.user.id);
                 setIsLoading(false);
             } else if (event === 'SIGNED_OUT') {
@@ -174,6 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } else if (event === 'INITIAL_SESSION') {
                 // Handle initial session event if not handled by initAuth
                 if (session) {
+                    setIsLoading(true);
                     await fetchProfile(session.user.id);
                 }
                 setIsLoading(false);
@@ -199,8 +213,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (error) return { success: false, error: error.message };
+
+        // Wait for profile to be created/fetched before returning
+        if (data.user) {
+            await fetchProfile(data.user.id);
+        }
+
         return { success: true };
-    }, [supabase]);
+    }, [supabase, fetchProfile]);
 
     const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
         if (!isSupabaseConfigured()) {
@@ -212,8 +232,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (error) return { success: false, error: error.message };
+
+        // Wait for profile to be fetched before returning
+        if (data.user) {
+            await fetchProfile(data.user.id);
+        }
+
         return { success: true };
-    }, [supabase]);
+    }, [supabase, fetchProfile]);
 
     const logout = useCallback(async () => {
         await supabase.auth.signOut();

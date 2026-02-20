@@ -46,7 +46,7 @@ const scaleIn = {
 // Shop URL is now dynamic based on merchantProfile.id
 
 export default function VendorDashboard() {
-    const { isLoggedIn, isGuest, user, merchantProfile, isLoading } = useAuth();
+    const { isLoggedIn, isGuest, user, role, merchantProfile, isLoading } = useAuth();
     const { t } = useLanguage();
     const router = useRouter();
     const [showQR, setShowQR] = useState(false);
@@ -56,11 +56,12 @@ export default function VendorDashboard() {
     // Redirect guests to onboarding
     useEffect(() => {
         if (!isLoading) {
-            if (!isLoggedIn || isGuest) {
+            // Redirect guests or merchants who haven't set up a shop yet
+            if (!isLoggedIn || isGuest || (role === 'merchant' && !merchantProfile)) {
                 router.replace("/onboarding");
             }
         }
-    }, [isLoggedIn, isGuest, router, isLoading]);
+    }, [isLoggedIn, isGuest, role, merchantProfile, router, isLoading]);
 
     if (isLoading) {
         return (
