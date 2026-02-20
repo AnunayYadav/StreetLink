@@ -49,7 +49,7 @@ export default function OnboardingPage() {
     const { t } = useLanguage();
     const router = useRouter();
     const categories = getCategories(t);
-    const { isLoggedIn, isGuest, user, isLoading, refreshProfile } = useAuth();
+    const { isLoggedIn, isGuest, user } = useAuth();
     const [step, setStep] = useState(1);
     const [direction, setDirection] = useState(0);
     const [shopNameError, setShopNameError] = useState("");
@@ -61,20 +61,10 @@ export default function OnboardingPage() {
 
     // Redirect guests to login first
     useEffect(() => {
-        if (!isLoading) {
-            if (isGuest) {
-                router.replace("/login?redirect=/onboarding");
-            }
+        if (isGuest) {
+            router.replace("/login?redirect=/onboarding");
         }
-    }, [isGuest, router, isLoading]);
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
-            </div>
-        );
-    }
+    }, [isGuest, router]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState<{
@@ -230,10 +220,7 @@ export default function OnboardingPage() {
 
             if (roleError) throw roleError;
 
-            // 3. Refresh profile to update role and merchantProfile in context
-            await refreshProfile();
-
-            // 4. Success
+            // 3. Success
             router.push('/dashboard');
         } catch (error: any) {
             console.error("Launch error:", error);

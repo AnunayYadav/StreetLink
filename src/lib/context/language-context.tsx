@@ -99,7 +99,6 @@ const translations: Record<LanguageCode, Record<string, string>> = {
 
         // Explorer
         "explorer.title": "Market Explorer",
-        "explorer.subtitle": "Discover Local Vendors",
         "explorer.nearby": "Nearby Shops",
         "explorer.placeholder": "Search tailors, grocers, repair shops...",
         "explorer.popular": "Popular Searches",
@@ -284,7 +283,6 @@ const translations: Record<LanguageCode, Record<string, string>> = {
         "dashboard.copied": "कॉपी किया गया!",
 
         "explorer.title": "मार्केट एक्सप्लोरर",
-        "explorer.subtitle": "स्थानीय विक्रेताओं को खोजें",
         "explorer.nearby": "आस-पास की दुकानें",
         "explorer.placeholder": "दर्जी, किराना, मरम्मत की दुकानें खोजें...",
         "explorer.popular": "लोकप्रिय खोजें",
@@ -465,7 +463,6 @@ const translations: Record<LanguageCode, Record<string, string>> = {
         "dashboard.copied": "நகலெடுக்கப்பட்டது!",
 
         "explorer.title": "சந்தை ஆய்வு",
-        "explorer.subtitle": "உள்ளூர் வணிகர்களைக் கண்டறியவும்",
         "explorer.nearby": "அருகிலுள்ள கடைகள்",
         "explorer.placeholder": "தையல்காரர்கள், மளிகைக் கடைகள், பழுதுபார்க்கும் கடைகளைத் தேடுங்கள்...",
         "explorer.popular": "பிரபலமான தேடல்கள்",
@@ -646,7 +643,6 @@ const translations: Record<LanguageCode, Record<string, string>> = {
         "dashboard.copied": "కాపీ చేయబడింది!",
 
         "explorer.title": "మార్కెట్ ఎక్స్‌ప్లోరర్",
-        "explorer.subtitle": "స్థానిక వ్యాపారులను కనుగొనండి",
         "explorer.nearby": "సమీపంలోని దుకాణాలు",
         "explorer.placeholder": "Tailors, grocers, రిపేర్ షాపుల కోసం వెతకండి...",
         "explorer.popular": "ప్రముఖ శోధనలు",

@@ -30,7 +30,6 @@ function LoginContent() {
     const redirectTo = searchParams.get("redirect") || "/";
 
     const [mode, setMode] = useState<"login" | "signup">("login");
-    const [role, setRole] = useState<"user" | "merchant">("user");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -73,7 +72,7 @@ function LoginContent() {
 
         let result;
         if (mode === "signup") {
-            result = await signup(name.trim(), email.trim(), password, role);
+            result = await signup(name.trim(), email.trim(), password);
         } else {
             result = await login(email.trim(), password);
         }
@@ -81,14 +80,7 @@ function LoginContent() {
         if (result.success) {
             setSuccess(true);
             setTimeout(() => {
-                // If merchant signup, go to onboarding/dashboard
-                if (mode === "signup" && role === "merchant") {
-                    router.push("/dashboard");
-                } else if (mode === "signup" && role === "user") {
-                    router.push("/search");
-                } else {
-                    router.push(redirectTo);
-                }
+                router.push(redirectTo);
             }, 800);
         } else {
             setError(result.error || "Something went wrong");
@@ -213,60 +205,26 @@ function LoginContent() {
                         onSubmit={handleSubmit}
                         className="space-y-4"
                     >
-                        {/* Role Selection (signup only) */}
+                        {/* Name (signup only) */}
                         <AnimatePresence>
                             {mode === "signup" && (
                                 <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="space-y-4 mb-6"
+                                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                                    animate={{ opacity: 1, height: "auto", marginBottom: 16 }}
+                                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                                 >
-                                    <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5 block">Join as</label>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setRole("user")}
-                                            className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center ${role === "user" ? "border-primary bg-primary/5 shadow-lg shadow-primary/10" : "border-surface-100 bg-surface-50 hover:bg-surface-100"}`}
-                                        >
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${role === "user" ? "bg-primary text-white" : "bg-surface-100 text-surface-400"}`}>
-                                                <User size={20} />
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                <p className="text-xs font-bold text-surface-900">Consumer</p>
-                                                <p className="text-[8px] text-surface-400 font-medium">Shop & Explore</p>
-                                            </div>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setRole("merchant")}
-                                            className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 text-center ${role === "merchant" ? "border-primary bg-primary/5 shadow-lg shadow-primary/10" : "border-surface-100 bg-surface-50 hover:bg-surface-100"}`}
-                                        >
-                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${role === "merchant" ? "bg-primary text-white" : "bg-surface-100 text-surface-400"}`}>
-                                                <Store size={20} />
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                <p className="text-xs font-bold text-surface-900">Merchant</p>
-                                                <p className="text-[8px] text-surface-400 font-medium">Digitalize Shop</p>
-                                            </div>
-                                        </button>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5 mb-1.5 block">Full Name</label>
-                                            <div className="relative">
-                                                <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-300" />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Your name"
-                                                    value={name}
-                                                    onChange={e => { setName(e.target.value); setError(""); }}
-                                                    className="w-full h-12 pl-10 pr-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all font-inter"
-                                                    autoComplete="name"
-                                                />
-                                            </div>
-                                        </div>
+                                    <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5 mb-1.5 block">Full Name</label>
+                                    <div className="relative">
+                                        <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-300" />
+                                        <input
+                                            type="text"
+                                            placeholder="Your name"
+                                            value={name}
+                                            onChange={e => { setName(e.target.value); setError(""); }}
+                                            className="w-full h-12 pl-10 pr-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
+                                            autoComplete="name"
+                                        />
                                     </div>
                                 </motion.div>
                             )}

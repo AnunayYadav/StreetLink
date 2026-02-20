@@ -38,8 +38,8 @@ interface AuthContextType {
     user: UserProfile | null;
     merchantProfile: MerchantProfile | null;
     isLoading: boolean;
+    signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-    signup: (name: string, email: string, password: string, role?: UserRole) => Promise<{ success: boolean; error?: string }>;
     refreshProfile: () => Promise<void>;
     logout: () => Promise<void>;
 }
@@ -63,60 +63,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .eq('id', userId)
                 .single();
 
-            let activeProfile = profile;
-
             if (profileError || !profile) {
-                console.warn("Profile not found or error, attempting auto-creation:", profileError);
                 // FALLBACK: If profile doesn't exist in table, create it manually
+                // This handles cases where the SQL trigger might have failed
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session?.user) {
-                    const metadataRole = session.user.user_metadata?.role || 'user';
                     const { data: newProfile, error: createError } = await supabase
                         .from('profiles')
                         .upsert({
                             id: session.user.id,
                             full_name: session.user.user_metadata?.full_name || 'User',
                             email: session.user.email,
-                            role: metadataRole
+                            role: 'user'
                         })
                         .select()
                         .single();
 
                     if (createError) {
                         console.error("Critical: Failed to auto-create profile:", createError);
-                    } else {
-                        activeProfile = newProfile;
+                        return;
                     }
-                } else {
-                    console.error("No active session to create profile from");
+
+                    // Recursive call to proceed with the new profile
+                    await fetchProfile(userId);
                     return;
                 }
-            }
-
-            if (!activeProfile) {
-                console.warn("Could not obtain a profile for user, using session fallback:", userId);
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
-                    const fallbackRole = (session.user.user_metadata?.role as UserRole) || 'user';
-                    setRole(fallbackRole);
-                    setUser({
-                        id: session.user.id,
-                        name: session.user.user_metadata?.full_name || 'User',
-                        email: session.user.email || '',
-                        role: fallbackRole,
-                        createdAt: new Date().toISOString()
-                    });
-                }
+                console.error("Error fetching profile:", profileError);
                 return;
             }
 
             const mappedUser: UserProfile = {
-                id: activeProfile.id,
-                name: activeProfile.full_name || 'User',
-                email: activeProfile.email,
-                role: (activeProfile.role as UserRole) || 'user',
-                avatar_url: activeProfile.avatar_url,
-                createdAt: activeProfile.created_at
+                id: profile.id,
+                name: profile.full_name || 'User',
+                email: profile.email,
+                role: (profile.role as UserRole) || 'user',
+                avatar_url: profile.avatar_url,
+                createdAt: profile.created_at
             };
 
             setUser(mappedUser);
@@ -159,23 +141,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const initAuth = async () => {
-            try {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
-                    await fetchProfile(session.user.id);
-                }
-            } catch (err) {
-                console.error("Session init error:", err);
-            } finally {
-                setIsLoading(false);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                await fetchProfile(session.user.id);
             }
+            setIsLoading(false);
         };
 
         initAuth();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session) {
-                setIsLoading(true);
                 await fetchProfile(session.user.id);
                 setIsLoading(false);
             } else if (event === 'SIGNED_OUT') {
@@ -184,20 +160,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setMerchantProfile(null);
                 setIsLoading(false);
                 router.push('/');
-            } else if (event === 'INITIAL_SESSION') {
-                // Handle initial session event if not handled by initAuth
-                if (session) {
-                    setIsLoading(true);
-                    await fetchProfile(session.user.id);
-                }
-                setIsLoading(false);
             }
         });
 
         return () => subscription.unsubscribe();
     }, [supabase, fetchProfile, router]);
 
-    const signup = useCallback(async (name: string, email: string, password: string, role: UserRole = "user"): Promise<{ success: boolean; error?: string }> => {
+    const signup = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
         if (!isSupabaseConfigured()) {
             return { success: false, error: "Supabase is not configured. Please add your URL and Key to .env.local" };
         }
@@ -207,20 +176,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             options: {
                 data: {
                     full_name: name,
-                    role: role
                 }
             }
         });
 
         if (error) return { success: false, error: error.message };
-
-        // Wait for profile to be created/fetched before returning
-        if (data.user) {
-            await fetchProfile(data.user.id);
-        }
-
         return { success: true };
-    }, [supabase, fetchProfile]);
+    }, [supabase]);
 
     const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
         if (!isSupabaseConfigured()) {
@@ -232,14 +194,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (error) return { success: false, error: error.message };
-
-        // Wait for profile to be fetched before returning
-        if (data.user) {
-            await fetchProfile(data.user.id);
-        }
-
         return { success: true };
-    }, [supabase, fetchProfile]);
+    }, [supabase]);
 
     const logout = useCallback(async () => {
         await supabase.auth.signOut();

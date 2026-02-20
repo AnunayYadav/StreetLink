@@ -14,8 +14,7 @@ import {
     Download,
     Copy,
     Check,
-    LogIn,
-    Loader2
+    LogIn
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -46,7 +45,7 @@ const scaleIn = {
 // Shop URL is now dynamic based on merchantProfile.id
 
 export default function VendorDashboard() {
-    const { isLoggedIn, isGuest, user, role, merchantProfile, isLoading } = useAuth();
+    const { isLoggedIn, isGuest, user, merchantProfile } = useAuth();
     const { t } = useLanguage();
     const router = useRouter();
     const [showQR, setShowQR] = useState(false);
@@ -55,21 +54,10 @@ export default function VendorDashboard() {
 
     // Redirect guests to onboarding
     useEffect(() => {
-        if (!isLoading) {
-            // Redirect guests or merchants who haven't set up a shop yet
-            if (!isLoggedIn || isGuest || (role === 'merchant' && !merchantProfile)) {
-                router.replace("/onboarding");
-            }
+        if (!isLoggedIn || isGuest) { // Changed condition to check for logged in merchant
+            router.replace("/onboarding");
         }
-    }, [isLoggedIn, isGuest, role, merchantProfile, router, isLoading]);
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
-            </div>
-        );
-    }
+    }, [isLoggedIn, isGuest, router]);
 
     const shopUrl = typeof window !== "undefined" && merchantProfile?.id
         ? `${window.location.origin}/shop/${merchantProfile.id}`

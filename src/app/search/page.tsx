@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import Navbar from "@/components/Navbar";
 import { useLanguage } from "@/lib/context/language-context";
 import { createClient } from "@/lib/supabase/client";
 
@@ -57,7 +56,7 @@ export default function CustomerDiscovery() {
         { key: "Repair", label: t("cat.repair"), icon: Wrench, color: "#64748B" },
         { key: "Pharmacy", label: t("cat.pharmacy"), icon: Pill, color: "#14B8A6" },
         { key: "Cafe & Tea", label: t("cat.cafe"), icon: Coffee, color: "#D97706" },
-        { key: "Others", label: t("cat.others"), icon: Sparkles, color: "#E23744" },
+        { key: "Others", label: t("onboarding.others"), icon: Sparkles, color: "#E23744" },
     ];
 
     const trendingSearches = [
@@ -85,64 +84,60 @@ export default function CustomerDiscovery() {
     };
 
     return (
-        <div className="min-h-screen bg-surface-50 flex flex-col relative overflow-hidden">
-            {/* Dynamic Background Elements */}
-            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-                <motion.div
-                    animate={{ x: [0, 30, 0], y: [0, -20, 0], scale: [1, 1.1, 1] }}
-                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute -top-[10%] -right-[10%] w-[60%] h-[60%] bg-primary/8 rounded-full blur-[140px]"
-                />
-                <motion.div
-                    animate={{ x: [0, -15, 0], y: [0, 20, 0] }}
-                    transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-                    className="absolute bottom-[10%] -left-[10%] w-[45%] h-[45%] bg-secondary/8 rounded-full blur-[120px]"
-                />
-                {/* Texture Overlay */}
-                <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150" />
-            </div>
-
-            <Navbar />
-
-            <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-12 pt-10 pb-4 w-full">
-                <motion.div
-                    initial={{ opacity: 0, x: -15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1, duration: 0.4 }}
-                    className="flex items-center gap-3 mb-8"
-                >
+        <div className="min-h-screen bg-background">
+            {/* Header */}
+            <motion.header
+                initial={{ opacity: 0, y: -15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="sticky top-0 bg-background/90 backdrop-blur-xl z-30"
+            >
+                <div className="max-w-3xl mx-auto px-5 md:px-8 pt-6 pb-4">
                     <motion.div
-                        animate={{ y: [0, -2, 0] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-lg shadow-primary/5"
+                        initial={{ opacity: 0, x: -15 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1, duration: 0.4 }}
+                        className="flex items-center gap-3 mb-4"
                     >
-                        <Compass size={24} />
+                        <motion.div whileHover={{ x: -2 }} whileTap={{ scale: 0.9 }}>
+                            <Link href="/" className="w-10 h-10 bg-surface-50 rounded-xl flex items-center justify-center text-surface-400 hover:text-surface-900 transition-colors">
+                                <ArrowLeft size={18} />
+                            </Link>
+                        </motion.div>
+                        <motion.div
+                            animate={{ y: [0, -2, 0] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                            className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center"
+                        >
+                            <Compass size={18} />
+                        </motion.div>
+                        <div>
+                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">{t("explorer.title")}</p>
+                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">{t("explorer.subtitle") || "Nearby Shops"}</h1>
+                        </div>
                     </motion.div>
-                    <div>
-                        <h1 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">{t("explorer.subtitle") || "Nearby Shops"}</h1>
-                    </div>
-                </motion.div>
 
-                {/* Search Bar */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.4 }}
-                    className="relative group"
-                >
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within:text-primary transition-colors" size={18} />
-                    <input
-                        type="text"
-                        placeholder={t("explorer.placeholder")}
-                        className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white/70 dark:bg-surface-50/70 backdrop-blur-xl border border-border-subtle outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </motion.div>
-            </div>
+                    {/* Search Bar */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.4 }}
+                        className="relative"
+                    >
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-300" size={16} />
+                        <input
+                            type="text"
+                            placeholder={t("explorer.placeholder")}
+                            className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </motion.div>
+                </div>
+            </motion.header>
 
             <main className="w-full pb-24">
-                <div className="max-w-7xl mx-auto px-5 md:px-12 space-y-8 pt-2">
+                <div className="max-w-3xl mx-auto px-5 md:px-8 space-y-6 pt-2">
 
                     {/* Category Tabs */}
                     <motion.div
@@ -164,16 +159,16 @@ export default function CustomerDiscovery() {
                                         whileHover={{ scale: 1.05, y: -2 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => setActiveCategory(cat.key)}
-                                        className="flex flex-col items-center gap-2 shrink-0 group"
+                                        className="flex flex-col items-center gap-1.5 shrink-0"
                                     >
-                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isActive
-                                            ? "bg-primary text-white shadow-xl shadow-primary/30 scale-110"
-                                            : "bg-white/70 dark:bg-surface-50/70 backdrop-blur-md text-surface-400 hover:bg-white dark:hover:bg-surface-100 border border-border-subtle"
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${isActive
+                                            ? "bg-primary text-white shadow-lg shadow-primary/25"
+                                            : "bg-surface-50 text-surface-400 hover:bg-surface-100"
                                             }`}
                                         >
-                                            <IconComp size={24} strokeWidth={isActive ? 2.5 : 2} />
+                                            <IconComp size={20} strokeWidth={2} />
                                         </div>
-                                        <span className={`text-[11px] font-bold tracking-tight transition-colors ${isActive ? "text-primary" : "text-surface-500 group-hover:text-surface-900"}`}>
+                                        <span className={`text-[10px] font-semibold transition-colors ${isActive ? "text-primary" : "text-surface-400"}`}>
                                             {cat.label}
                                         </span>
                                     </motion.button>
@@ -183,7 +178,7 @@ export default function CustomerDiscovery() {
                     </motion.div>
 
                     {/* Quick Stats */}
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-3">
                         {[
                             { val: vendors.length.toString(), label: t("explorer.shops_nearby"), color: "" },
                             { val: "10+", label: t("explorer.categories_stat"), color: "" },
@@ -195,11 +190,11 @@ export default function CustomerDiscovery() {
                                 variants={fadeUp}
                                 initial="hidden"
                                 animate="visible"
-                                whileHover={{ y: -4, scale: 1.02 }}
-                                className="bg-white/60 dark:bg-surface-50/60 backdrop-blur-md border border-border-subtle rounded-2xl p-4 text-center shadow-sm"
+                                whileHover={{ y: -2 }}
+                                className="bg-surface-50 rounded-xl p-3 text-center"
                             >
-                                <p className={`text-xl font-black text-surface-900 ${stat.color} tracking-tight`}>{stat.val}</p>
-                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mt-1">{stat.label}</p>
+                                <p className={`text-lg font-bold text-surface-900 ${stat.color}`}>{stat.val}</p>
+                                <p className="text-[10px] text-surface-400">{stat.label}</p>
                             </motion.div>
                         ))}
                     </div>
@@ -219,9 +214,9 @@ export default function CustomerDiscovery() {
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: i * 0.08, duration: 0.4 }}
-                                            whileHover={{ x: 6, scale: 1.005 }}
-                                            whileTap={{ scale: 0.99 }}
-                                            className="bg-white/60 dark:bg-surface-50/60 backdrop-blur-md border border-border-subtle rounded-3xl p-4 flex gap-5 items-center hover:bg-white dark:hover:bg-surface-100 transition-all shadow-sm hover:shadow-md"
+                                            whileHover={{ x: 4 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            className="bg-surface-50 rounded-2xl p-3 flex gap-3 items-center hover:bg-surface-100 transition-colors"
                                         >
                                             <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-100 shrink-0">
                                                 <img
