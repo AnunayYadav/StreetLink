@@ -34,7 +34,7 @@ export default function SettingsPage() {
         ...(isMerchant ? [{
             title: t("settings.shop_profile"),
             items: [
-                { icon: Store, label: merchantProfile?.shopName || "My Shop", desc: merchantProfile?.categories?.join(", ") || t("settings.manage_shop"), action: "link" as const, href: "/onboarding" },
+                { icon: Store, label: merchantProfile?.name || "My Shop", desc: merchantProfile?.categories?.join(", ") || t("settings.manage_shop"), action: "link" as const, href: "/onboarding" },
             ]
         }] : []),
         {
@@ -101,10 +101,10 @@ export default function SettingsPage() {
                             transition={{ delay: 0.25, type: "spring", stiffness: 300, damping: 15 }}
                             className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg"
                         >
-                            {merchantProfile?.shopName?.[0]?.toUpperCase() || "M"}
+                            {merchantProfile?.name?.[0]?.toUpperCase() || "M"}
                         </motion.div>
                         <div className="flex-1">
-                            <p className="font-semibold text-sm text-surface-900">{merchantProfile?.shopName || "Merchant"}</p>
+                            <p className="font-semibold text-sm text-surface-900">{merchantProfile?.name || "Merchant"}</p>
                             <p className="text-xs text-surface-400">{user?.email || t("common.verified")}</p>
                         </div>
                         <div className="px-2 py-1 bg-primary text-white text-[9px] font-bold uppercase tracking-wider rounded-lg shadow-sm shadow-primary/20">
