@@ -63,9 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .eq('id', userId)
                 .single();
 
+            let activeProfile = profile;
+
             if (profileError || !profile) {
+                console.warn("Profile not found or error, attempting auto-creation:", profileError);
                 // FALLBACK: If profile doesn't exist in table, create it manually
-                // This handles cases where the SQL trigger might have failed
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session?.user) {
                     const metadataRole = session.user.user_metadata?.role || 'user';
@@ -82,24 +84,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                     if (createError) {
                         console.error("Critical: Failed to auto-create profile:", createError);
-                        return;
+                    } else {
+                        activeProfile = newProfile;
                     }
-
-                    // Recursive call to proceed with the new profile
-                    await fetchProfile(userId);
+                } else {
+                    console.error("No active session to create profile from");
                     return;
                 }
-                console.error("Error fetching profile:", profileError);
+            }
+
+            if (!activeProfile) {
+                console.error("Could not obtain a profile for user:", userId);
                 return;
             }
 
             const mappedUser: UserProfile = {
-                id: profile.id,
-                name: profile.full_name || 'User',
-                email: profile.email,
-                role: (profile.role as UserRole) || 'user',
-                avatar_url: profile.avatar_url,
-                createdAt: profile.created_at
+                id: activeProfile.id,
+                name: activeProfile.full_name || 'User',
+                email: activeProfile.email,
+                role: (activeProfile.role as UserRole) || 'user',
+                avatar_url: activeProfile.avatar_url,
+                createdAt: activeProfile.created_at
             };
 
             setUser(mappedUser);
@@ -142,11 +147,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const initAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                await fetchProfile(session.user.id);
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    await fetchProfile(session.user.id);
+                }
+            } catch (err) {
+                console.error("Session init error:", err);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         };
 
         initAuth();
@@ -161,6 +171,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setMerchantProfile(null);
                 setIsLoading(false);
                 router.push('/');
+            } else if (event === 'INITIAL_SESSION') {
+                // Handle initial session event if not handled by initAuth
+                if (session) {
+                    await fetchProfile(session.user.id);
+                }
+                setIsLoading(false);
             }
         });
 
