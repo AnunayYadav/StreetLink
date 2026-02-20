@@ -12,8 +12,10 @@ import {
     Sparkles,
     Bot,
     User,
+    Globe,
+    ChevronDown,
 } from "lucide-react";
-import { useLanguage } from "@/lib/context/language-context";
+import { useLanguage, LANGUAGES, type LanguageCode } from "@/lib/context/language-context";
 
 interface Message {
     role: "user" | "assistant";
@@ -21,7 +23,8 @@ interface Message {
 }
 
 export default function VendorAssistant() {
-    const { langCode } = useLanguage();
+    const { langCode, language, setLanguage } = useLanguage();
+    const [showLangPicker, setShowLangPicker] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
@@ -242,6 +245,21 @@ export default function VendorAssistant() {
                                 </div>
 
                                 <div className="flex items-center gap-1.5">
+                                    {/* Language toggle */}
+                                    <button
+                                        onClick={() => setShowLangPicker(!showLangPicker)}
+                                        className={`h-9 px-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-colors text-[11px] font-bold uppercase tracking-wider
+                                            ${showLangPicker
+                                                ? "bg-primary/10 text-primary"
+                                                : "bg-[var(--surface-100)] text-[var(--surface-muted)] hover:text-[var(--foreground)]"
+                                            }`}
+                                        title="Change language"
+                                    >
+                                        <Globe size={15} />
+                                        <span className="hidden sm:inline">{language.nativeName}</span>
+                                        <ChevronDown size={12} className={`transition-transform ${showLangPicker ? "rotate-180" : ""}`} />
+                                    </button>
+
                                     {/* Voice toggle */}
                                     <button
                                         onClick={() => {
@@ -268,6 +286,50 @@ export default function VendorAssistant() {
                                     </button>
                                 </div>
                             </div>
+
+                            {/* ──── LANGUAGE PICKER ──── */}
+                            <AnimatePresence>
+                                {showLangPicker && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="overflow-hidden border-b border-[var(--border-subtle)]"
+                                    >
+                                        <div className="px-4 py-3">
+                                            <p className="text-[10px] font-bold text-[var(--surface-muted)] uppercase tracking-widest mb-2.5">
+                                                Choose Language
+                                            </p>
+                                            <div className="grid grid-cols-3 gap-1.5">
+                                                {LANGUAGES.map((lang) => (
+                                                    <button
+                                                        key={lang.code}
+                                                        onClick={() => {
+                                                            setLanguage(lang.code);
+                                                            setShowLangPicker(false);
+                                                        }}
+                                                        className={`px-2.5 py-2 rounded-xl text-left transition-all
+                                                            ${langCode === lang.code
+                                                                ? "bg-primary/10 border border-primary/20"
+                                                                : "bg-[var(--surface-100)] border border-transparent hover:border-[var(--border-subtle)]"
+                                                            }`}
+                                                    >
+                                                        <span className={`block text-[12px] font-bold leading-tight
+                                                            ${langCode === lang.code ? "text-primary" : "text-[var(--foreground)]"}`}
+                                                        >
+                                                            {lang.nativeName}
+                                                        </span>
+                                                        <span className="block text-[9px] font-medium text-[var(--surface-muted)] mt-0.5">
+                                                            {lang.name}
+                                                        </span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             {/* ──── MESSAGES ──── */}
                             <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4 overscroll-contain">
