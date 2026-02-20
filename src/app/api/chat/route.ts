@@ -22,15 +22,7 @@ Constraint: ONLY talk about StreetLink. If they ask about unrelated things, poli
 
 export async function POST(req: Request) {
     try {
-        const apiKey = process.env.GEMINI_API_KEY;
-
-        if (!apiKey) {
-            console.error("GEMINI_API_KEY is not set in environment variables");
-            return NextResponse.json(
-                { error: "API key not configured", detail: "GEMINI_API_KEY env var is missing" },
-                { status: 500 }
-            );
-        }
+        const apiKey = process.env.GEMINI_API_KEY || "AIzaSyDNeauhJgpOQV_HIV37ki7uUTg6YHK0cSo";
 
         const { message, history } = await req.json();
 
@@ -41,7 +33,7 @@ export async function POST(req: Request) {
         const genAI = new GoogleGenerativeAI(apiKey);
 
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash",
+            model: "gemini-1.5-flash",
             systemInstruction: SYSTEM_PROMPT,
         });
 
