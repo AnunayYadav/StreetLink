@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/context/theme-context";
+import { AuthProvider } from "@/lib/context/auth-context";
+import { LanguageProvider } from "@/lib/context/language-context";
 
 
 const inter = Inter({
@@ -42,9 +44,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${outfit.variable} antialiased font-sans`}>
         <ThemeProvider>
-          <div className="app-container">
-            {children}
-          </div>
+          <AuthProvider>
+            <LanguageProvider>
+              <div className="app-container">
+                {children}
+              </div>
+            </LanguageProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

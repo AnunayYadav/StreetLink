@@ -2,21 +2,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Home, User, ShoppingBag } from "lucide-react";
+import { Search, Home, User, ShoppingBag, LayoutDashboard } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/lib/context/auth-context";
+import { useLanguage } from "@/lib/context/language-context";
 
 export default function BottomNav() {
     const pathname = usePathname();
+    const { isMerchant } = useAuth();
+    const { t } = useLanguage();
 
-    // Don't show on landing page, checkout, or shop views
-    if (pathname === "/checkout" || pathname?.startsWith("/shop/")) return null;
+    // Don't show on checkout, shop views, onboarding, or login
+    if (pathname === "/checkout" || pathname?.startsWith("/shop/") || pathname === "/onboarding" || pathname === "/login") return null;
 
-    const navItems = [
-        { label: "Dashboard", icon: Home, href: "/" },
-        { label: "Explorer", icon: Search, href: "/search" },
-        { label: "Orders", icon: ShoppingBag, href: "/orders" },
-        { label: "Profile", icon: User, href: "/onboarding" },
-    ];
+    // Build nav items dynamically based on role
+    const navItems = isMerchant
+        ? [
+            { label: t("nav.dashboard"), icon: LayoutDashboard, href: "/dashboard" },
+            { label: t("nav.explorer"), icon: Search, href: "/search" },
+            { label: t("nav.orders"), icon: ShoppingBag, href: "/orders" },
+            { label: t("nav.settings"), icon: User, href: "/settings" },
+        ]
+        : [
+            { label: t("nav.home"), icon: Home, href: "/" },
+            { label: t("nav.explorer"), icon: Search, href: "/search" },
+            { label: t("nav.orders"), icon: ShoppingBag, href: "/orders" },
+            { label: t("nav.settings"), icon: User, href: "/settings" },
+        ];
 
     return (
         <motion.nav

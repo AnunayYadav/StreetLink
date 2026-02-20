@@ -8,52 +8,54 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/lib/context/language-context";
 
 const VENDORS: any[] = [];
 
-const categories = [
-    { key: "all", label: "All", icon: LayoutGrid, color: "" },
-    { key: "grocery", label: "Grocery", icon: ShoppingBasket, color: "#3B82F6" },
-    { key: "food", label: "Food & Chai", icon: UtensilsCrossed, color: "#F59E0B" },
-    { key: "clothing", label: "Clothing", icon: Shirt, color: "#EC4899" },
-    { key: "fruits", label: "Fruits", icon: Cherry, color: "#F43F5E" },
-    { key: "vegetables", label: "Vegetables", icon: Salad, color: "#22C55E" },
-    { key: "tailoring", label: "Tailoring", icon: Scissors, color: "#A855F7" },
-    { key: "repair", label: "Repair", icon: Wrench, color: "#64748B" },
-    { key: "pharmacy", label: "Pharmacy", icon: Pill, color: "#14B8A6" },
-    { key: "cafe", label: "Café & Tea", icon: Coffee, color: "#D97706" },
-    { key: "delivery", label: "Delivery", icon: Bike, color: "#E23744" },
-];
-
-const trendingSearches = [
-    "Tailor near me", "Fresh vegetables", "Phone repair",
-    "Chai stall", "Grocery store", "Medical shop",
-    "Clothes alteration", "Cycle repair", "Stationery",
-    "Salon", "Bakery", "Key maker"
-];
-
-const fadeUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i: number) => ({
-        opacity: 1,
-        y: 0,
-        transition: { delay: i * 0.07, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }
-    })
-};
-
-const staggerContainer = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.04 } }
-};
-
-const chipVariant = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { opacity: 1, scale: 1, transition: { type: "spring" as const, stiffness: 300, damping: 20 } }
-};
-
 export default function CustomerDiscovery() {
+    const { t } = useLanguage();
     const [activeCategory, setActiveCategory] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
+
+    const categories = [
+        { key: "all", label: t("common.all"), icon: LayoutGrid, color: "" },
+        { key: "grocery", label: t("cat.grocery"), icon: ShoppingBasket, color: "#3B82F6" },
+        { key: "food", label: t("cat.food"), icon: UtensilsCrossed, color: "#F59E0B" },
+        { key: "clothing", label: t("cat.clothing"), icon: Shirt, color: "#EC4899" },
+        { key: "fruits", label: t("cat.fruits"), icon: Cherry, color: "#F43F5E" },
+        { key: "vegetables", label: t("cat.vegetables"), icon: Salad, color: "#22C55E" },
+        { key: "tailoring", label: t("cat.tailoring"), icon: Scissors, color: "#A855F7" },
+        { key: "repair", label: t("cat.repair"), icon: Wrench, color: "#64748B" },
+        { key: "pharmacy", label: t("cat.pharmacy"), icon: Pill, color: "#14B8A6" },
+        { key: "cafe", label: t("cat.cafe"), icon: Coffee, color: "#D97706" },
+        { key: "delivery", label: t("onboarding.register"), icon: Bike, color: "#E23744" },
+    ];
+
+    const trendingSearches = [
+        "Tailor near me", "Fresh vegetables", "Phone repair",
+        "Chai stall", "Grocery store", "Medical shop",
+        "Clothes alteration", "Cycle repair", "Stationery",
+        "Salon", "Bakery", "Key maker"
+    ];
+
+    const fadeUp = {
+        hidden: { opacity: 0, y: 20 },
+        visible: (i: number) => ({
+            opacity: 1,
+            y: 0,
+            transition: { delay: i * 0.07, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }
+        })
+    };
+
+    const staggerContainer = {
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.04 } }
+    };
+
+    const chipVariant = {
+        hidden: { opacity: 0, scale: 0.8 },
+        visible: { opacity: 1, scale: 1, transition: { type: "spring" as const, stiffness: 300, damping: 20 } }
+    };
 
     return (
         <div className="min-h-screen bg-background">
@@ -84,8 +86,8 @@ export default function CustomerDiscovery() {
                             <Compass size={18} />
                         </motion.div>
                         <div>
-                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Market Explorer</p>
-                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">Discover Nearby</h1>
+                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">{t("explorer.title")}</p>
+                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">{t("explorer.subtitle") || "Nearby Shops"}</h1>
                         </div>
                     </motion.div>
 
@@ -99,7 +101,7 @@ export default function CustomerDiscovery() {
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-300" size={16} />
                         <input
                             type="text"
-                            placeholder="Search shops, services, products..."
+                            placeholder={t("explorer.placeholder")}
                             className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -176,19 +178,19 @@ export default function CustomerDiscovery() {
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary rounded-md text-[9px] font-semibold uppercase tracking-wider"
                             >
                                 <Sparkles size={10} fill="currentColor" strokeWidth={0} />
-                                Your Neighbourhood
+                                {t("explorer.your_neighbourhood")}
                             </motion.div>
-                            <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">Every Local Shop, One Tap Away</h2>
-                            <p className="text-white/60 text-xs max-w-sm">From tailors to grocers, chai stalls to repair shops — discover & support vendors around you.</p>
+                            <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">{t("explorer.one_tap")}</h2>
+                            <p className="text-white/60 text-xs max-w-sm">{t("explorer.one_tap_desc")}</p>
                         </motion.div>
                     </motion.section>
 
                     {/* Quick Stats */}
                     <div className="grid grid-cols-3 gap-3">
                         {[
-                            { val: "0", label: "Shops Nearby", color: "" },
-                            { val: "10+", label: "Categories", color: "" },
-                            { val: "Live", label: "Market Status", color: "text-primary" },
+                            { val: "0", label: t("explorer.shops_nearby"), color: "" },
+                            { val: "10+", label: t("explorer.categories_stat"), color: "" },
+                            { val: t("explorer.live"), label: t("explorer.market_status"), color: "text-primary" },
                         ].map((stat, i) => (
                             <motion.div
                                 key={stat.label}
@@ -207,7 +209,7 @@ export default function CustomerDiscovery() {
 
                     {/* Trending Searches */}
                     <motion.section custom={5} variants={fadeUp} initial="hidden" animate="visible" className="space-y-2.5">
-                        <h3 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">Popular Searches</h3>
+                        <h3 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">{t("explorer.popular")}</h3>
                         <motion.div
                             variants={staggerContainer}
                             initial="hidden"
@@ -232,8 +234,8 @@ export default function CustomerDiscovery() {
                     {/* Vendor List */}
                     <motion.section custom={6} variants={fadeUp} initial="hidden" animate="visible" className="space-y-3">
                         <div className="flex items-center justify-between ml-0.5">
-                            <h3 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider">Nearby Shops</h3>
-                            <span className="text-[10px] text-surface-300">Sorted by distance</span>
+                            <h3 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider">{t("explorer.nearby")}</h3>
+                            <span className="text-[10px] text-surface-300">{t("explorer.nearby_desc")}</span>
                         </div>
 
                         {VENDORS.length > 0 ? (
@@ -280,8 +282,8 @@ export default function CustomerDiscovery() {
                                 >
                                     <Store size={24} />
                                 </motion.div>
-                                <p className="font-semibold text-sm text-surface-900 mb-1">No vendors nearby yet</p>
-                                <p className="text-sm text-surface-400 max-w-xs">Local shops &amp; services will appear here once they join. Check back soon!</p>
+                                <p className="font-semibold text-sm text-surface-900 mb-1">{t("explorer.no_results")}</p>
+                                <p className="text-sm text-surface-400 max-w-xs">{t("explorer.inventory_updates")}</p>
                             </motion.div>
                         )}
                     </motion.section>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Camera, MapPin, Store, ArrowLeft, Languages, Sparkles,
@@ -10,19 +11,21 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useAuth } from "@/lib/context/auth-context";
+import { useLanguage } from "@/lib/context/language-context";
 
-const categories = [
-    { name: "Fruits", icon: Cherry, color: "#F43F5E", bg: "rgba(244,63,94,0.1)" },
-    { name: "Vegetables", icon: Salad, color: "#22C55E", bg: "rgba(34,197,94,0.1)" },
-    { name: "Street Food", icon: UtensilsCrossed, color: "#F59E0B", bg: "rgba(245,158,11,0.1)" },
-    { name: "Grocery", icon: ShoppingBasket, color: "#3B82F6", bg: "rgba(59,130,246,0.1)" },
-    { name: "Tailoring", icon: Scissors, color: "#A855F7", bg: "rgba(168,85,247,0.1)" },
-    { name: "Repair", icon: Wrench, color: "#64748B", bg: "rgba(100,116,139,0.1)" },
-    { name: "Cafe & Tea", icon: Coffee, color: "#D97706", bg: "rgba(217,119,6,0.1)" },
-    { name: "Clothing", icon: Shirt, color: "#EC4899", bg: "rgba(236,72,153,0.1)" },
-    { name: "Pharmacy", icon: Pill, color: "#14B8A6", bg: "rgba(20,184,166,0.1)" },
-    { name: "Delivery", icon: Bike, color: "#E23744", bg: "rgba(226,55,68,0.1)" },
-    { name: "Others", icon: MoreHorizontal, color: "#6366F1", bg: "rgba(99,102,241,0.1)" },
+const getCategories = (t: any) => [
+    { name: t("cat.fruits"), icon: Cherry, color: "#F43F5E", bg: "rgba(244,63,94,0.1)", key: "Fruits" },
+    { name: t("cat.vegetables"), icon: Salad, color: "#22C55E", bg: "rgba(34,197,94,0.1)", key: "Vegetables" },
+    { name: t("cat.food"), icon: UtensilsCrossed, color: "#F59E0B", bg: "rgba(245,158,11,0.1)", key: "Street Food" },
+    { name: t("cat.grocery"), icon: ShoppingBasket, color: "#3B82F6", bg: "rgba(59,130,246,0.1)", key: "Grocery" },
+    { name: t("cat.tailoring"), icon: Scissors, color: "#A855F7", bg: "rgba(168,85,247,0.1)", key: "Tailoring" },
+    { name: t("cat.repair"), icon: Wrench, color: "#64748B", bg: "rgba(100,116,139,0.1)", key: "Repair" },
+    { name: t("cat.cafe"), icon: Coffee, color: "#D97706", bg: "rgba(217,119,6,0.1)", key: "Cafe & Tea" },
+    { name: t("cat.clothing"), icon: Shirt, color: "#EC4899", bg: "rgba(236,72,153,0.1)", key: "Clothing" },
+    { name: t("cat.pharmacy"), icon: Pill, color: "#14B8A6", bg: "rgba(20,184,166,0.1)", key: "Pharmacy" },
+    { name: t("cat.delivery"), icon: Bike, color: "#E23744", bg: "rgba(226,55,68,0.1)", key: "Delivery" },
+    { name: t("cat.others"), icon: MoreHorizontal, color: "#6366F1", bg: "rgba(99,102,241,0.1)", key: "Others" },
 ];
 
 const pageVariants = {
@@ -42,6 +45,10 @@ const gridItem = {
 };
 
 export default function OnboardingPage() {
+    const { t } = useLanguage();
+    const router = useRouter();
+    const categories = getCategories(t);
+    const { loginAsMerchant, isLoggedIn, isGuest, user } = useAuth();
     const [step, setStep] = useState(1);
     const [direction, setDirection] = useState(0);
     const [shopNameError, setShopNameError] = useState("");
@@ -49,6 +56,13 @@ export default function OnboardingPage() {
     const [locationLoading, setLocationLoading] = useState(false);
     const [storePhoto, setStorePhoto] = useState<string | null>(null);
     const [storePhotoName, setStorePhotoName] = useState("");
+
+    // Redirect guests to login first
+    useEffect(() => {
+        if (isGuest) {
+            router.replace("/login?redirect=/onboarding");
+        }
+    }, [isGuest, router]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState<{
@@ -71,7 +85,7 @@ export default function OnboardingPage() {
         addressDetails: "",
         language: "English",
         phone: "",
-        email: "",
+        email: user?.email || "",
         upiId: "",
     });
 
@@ -92,13 +106,13 @@ export default function OnboardingPage() {
         if (step === 1) {
             let hasError = false;
             if (!formData.shopName.trim()) {
-                setShopNameError("Shop name is required");
+                setShopNameError(t("onboarding.shop_error"));
                 hasError = true;
             } else {
                 setShopNameError("");
             }
             if (formData.categories.length === 0) {
-                setCategoryError("Select at least one category");
+                setCategoryError(t("onboarding.cat_error"));
                 hasError = true;
             } else {
                 setCategoryError("");
@@ -146,7 +160,7 @@ export default function OnboardingPage() {
                 },
                 () => {
                     setLocationLoading(false);
-                    alert("Unable to detect location. Please allow location access.");
+                    alert(t("onboarding.address_error"));
                 },
                 { enableHighAccuracy: true, timeout: 10000 }
             );
@@ -188,8 +202,8 @@ export default function OnboardingPage() {
                             </Link>
                         </motion.div>
                         <div>
-                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Step {step} of 3</p>
-                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">Merchant Onboarding</h1>
+                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">{t("onboarding.step_of", step)}</p>
+                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">{t("onboarding.merchant_title")}</h1>
                         </div>
                     </div>
                     <ThemeToggle />
@@ -234,8 +248,8 @@ export default function OnboardingPage() {
                                     transition={{ delay: 0.1 }}
                                     className="space-y-1"
                                 >
-                                    <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">Your Digital Storefront</h2>
-                                    <p className="text-sm text-surface-400">Set up the basics for your shop.</p>
+                                    <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">{t("onboarding.step1_title")}</h2>
+                                    <p className="text-sm text-surface-400">{t("onboarding.step1_desc")}</p>
                                 </motion.div>
 
                                 {/* Shop Name Input */}
@@ -246,13 +260,13 @@ export default function OnboardingPage() {
                                     className="space-y-2"
                                 >
                                     <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5 flex items-center gap-1">
-                                        Shop Name <span className="text-red-400">*</span>
+                                        {t("onboarding.shop_name")} <span className="text-red-400">*</span>
                                     </label>
                                     <div className="relative group">
                                         <Store className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${shopNameError ? 'text-red-400' : 'text-surface-300 group-focus-within:text-primary'}`} size={18} />
                                         <input
                                             type="text"
-                                            placeholder="e.g. The Artisan Coffee"
+                                            placeholder={t("onboarding.shop_placeholder")}
                                             className={`w-full h-12 pl-11 pr-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 transition-all ${shopNameError ? 'ring-2 ring-red-400/40 focus:ring-red-400/60' : 'focus:ring-2 focus:ring-primary/20'}`}
                                             value={formData.shopName}
                                             onChange={(e) => {
@@ -283,8 +297,8 @@ export default function OnboardingPage() {
                                         transition={{ delay: 0.25 }}
                                         className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5 flex items-center gap-1"
                                     >
-                                        What do you sell? <span className="text-red-400">*</span>
-                                        <span className="text-[10px] font-normal text-surface-300 ml-1">(select multiple)</span>
+                                        {t("onboarding.what_sell")} <span className="text-red-400">*</span>
+                                        <span className="text-[10px] font-normal text-surface-300 ml-1">{t("onboarding.select_multiple")}</span>
                                     </motion.label>
                                     <motion.div
                                         variants={staggerGrid}
@@ -301,7 +315,7 @@ export default function OnboardingPage() {
                                                     variants={gridItem}
                                                     whileHover={{ scale: 1.04, y: -2 }}
                                                     whileTap={{ scale: 0.95 }}
-                                                    onClick={() => toggleCategory(cat.name)}
+                                                    onClick={() => toggleCategory(cat.key || cat.name)}
                                                     className={`relative p-3.5 rounded-2xl transition-colors group flex flex-col items-center gap-2 ${isSelected
                                                         ? 'bg-primary text-white shadow-lg shadow-primary/25'
                                                         : 'bg-surface-50 hover:bg-surface-100'
@@ -343,7 +357,7 @@ export default function OnboardingPage() {
                                                 <div className="pt-2">
                                                     <input
                                                         type="text"
-                                                        placeholder="Describe what you sell..."
+                                                        placeholder={t("onboarding.custom_cat")}
                                                         className="w-full h-11 px-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
                                                         value={formData.otherCategory}
                                                         onChange={(e) => setFormData({ ...formData, otherCategory: e.target.value })}
@@ -360,7 +374,9 @@ export default function OnboardingPage() {
                                             animate={{ opacity: 1 }}
                                             className="text-xs text-primary font-medium ml-0.5"
                                         >
-                                            {formData.categories.length} categor{formData.categories.length === 1 ? 'y' : 'ies'} selected
+                                            {formData.categories.length === 1
+                                                ? t("onboarding.cat_selected_single")
+                                                : t("onboarding.cat_selected_count", formData.categories.length)}
                                         </motion.p>
                                     )}
 
@@ -398,8 +414,8 @@ export default function OnboardingPage() {
                                     transition={{ delay: 0.1 }}
                                     className="space-y-1"
                                 >
-                                    <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">Identity & Reach</h2>
-                                    <p className="text-sm text-surface-400">Help customers find you on the map.</p>
+                                    <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">{t("onboarding.step2_title")}</h2>
+                                    <p className="text-sm text-surface-400">{t("onboarding.step2_desc")}</p>
                                 </motion.div>
 
                                 <div className="space-y-4">
@@ -437,7 +453,7 @@ export default function OnboardingPage() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-semibold text-sm text-surface-900">
-                                                    {locationLoading ? 'Detecting Location...' : formData.location ? 'Location Verified' : 'Auto-locate Shop'}
+                                                    {locationLoading ? t("onboarding.detecting_loc") : formData.location ? t("onboarding.loc_verified") : t("onboarding.locate")}
                                                 </p>
                                                 {locationLoading ? (
                                                     <div className="flex items-center gap-2 mt-1">
@@ -455,9 +471,9 @@ export default function OnboardingPage() {
                                                 ) : formData.address ? (
                                                     <p className="text-xs mt-0.5 text-primary font-medium truncate">{formData.address}</p>
                                                 ) : formData.location ? (
-                                                    <p className="text-xs mt-0.5 text-primary font-medium">GPS Locked ✓</p>
+                                                    <p className="text-xs mt-0.5 text-primary font-medium">{t("onboarding.gps_locked")}</p>
                                                 ) : (
-                                                    <p className="text-xs mt-0.5 text-surface-400">Tap to sync your position</p>
+                                                    <p className="text-xs mt-0.5 text-surface-400">{t("onboarding.loc_sync")}</p>
                                                 )}
                                             </div>
                                             {!formData.location && !locationLoading && (
@@ -489,14 +505,14 @@ export default function OnboardingPage() {
                                             >
                                                 <div className="bg-surface-50 rounded-xl p-4 space-y-3">
                                                     <div className="space-y-1">
-                                                        <label className="text-[10px] font-semibold text-surface-400 uppercase tracking-wider">Detected Address</label>
+                                                        <label className="text-[10px] font-semibold text-surface-400 uppercase tracking-wider">{t("onboarding.address_detected")}</label>
                                                         <p className="text-sm text-surface-700 leading-relaxed">{formData.address}</p>
                                                     </div>
                                                     <div className="space-y-1.5">
-                                                        <label className="text-[10px] font-semibold text-surface-400 uppercase tracking-wider">Additional Details (Optional)</label>
+                                                        <label className="text-[10px] font-semibold text-surface-400 uppercase tracking-wider">{t("onboarding.address_extra")}</label>
                                                         <input
                                                             type="text"
-                                                            placeholder="Floor, landmark, nearby shop..."
+                                                            placeholder={t("onboarding.address_placeholder")}
                                                             className="w-full h-10 px-3 rounded-lg bg-white dark:bg-surface-100 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
                                                             value={formData.addressDetails}
                                                             onChange={(e) => setFormData({ ...formData, addressDetails: e.target.value })}
@@ -532,7 +548,7 @@ export default function OnboardingPage() {
                                                 <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between">
                                                     <div>
                                                         <p className="text-white text-sm font-semibold flex items-center gap-1.5">
-                                                            <Check size={14} className="text-green-400" /> Photo Uploaded
+                                                            <Check size={14} className="text-green-400" /> {t("onboarding.photo_success")}
                                                         </p>
                                                         <p className="text-white/60 text-xs mt-0.5 truncate max-w-[200px]">{storePhotoName}</p>
                                                     </div>
@@ -570,8 +586,8 @@ export default function OnboardingPage() {
                                                     <Camera size={22} />
                                                 </motion.div>
                                                 <div className="text-center space-y-0.5">
-                                                    <p className="font-semibold text-sm text-surface-900">Upload Store Photo</p>
-                                                    <p className="text-xs text-surface-400">Increases trust by up to 80%</p>
+                                                    <p className="font-semibold text-sm text-surface-900">{t("onboarding.photo")}</p>
+                                                    <p className="text-xs text-surface-400">{t("onboarding.upload_desc")}</p>
                                                 </div>
                                                 <div className="flex gap-2 mt-1">
                                                     <span className="text-[10px] text-surface-300 flex items-center gap-1"><ImageIcon size={10} /> JPG, PNG, WEBP</span>
@@ -601,8 +617,8 @@ export default function OnboardingPage() {
                                     transition={{ delay: 0.1 }}
                                     className="space-y-1"
                                 >
-                                    <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">Ready to Launch!</h2>
-                                    <p className="text-sm text-surface-400">Add your contact details & preferences.</p>
+                                    <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">{t("onboarding.step3_title")}</h2>
+                                    <p className="text-sm text-surface-400">{t("onboarding.step3_desc")}</p>
                                 </motion.div>
 
                                 <div className="space-y-4">
@@ -614,7 +630,7 @@ export default function OnboardingPage() {
                                         className="space-y-2"
                                     >
                                         <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5 flex items-center gap-1">
-                                            Phone Number <span className="text-red-400">*</span>
+                                            {t("onboarding.phone")} <span className="text-red-400">*</span>
                                         </label>
                                         <div className="relative group">
                                             <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within:text-primary transition-colors" size={18} />
@@ -636,7 +652,7 @@ export default function OnboardingPage() {
                                         className="space-y-2"
                                     >
                                         <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">
-                                            Email Address
+                                            {t("onboarding.email")}
                                         </label>
                                         <div className="relative group">
                                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within:text-primary transition-colors" size={18} />
@@ -658,7 +674,7 @@ export default function OnboardingPage() {
                                         className="space-y-2"
                                     >
                                         <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">
-                                            UPI ID <span className="text-[10px] font-normal text-surface-300">(for payments)</span>
+                                            {t("onboarding.upi")} <span className="text-[10px] font-normal text-surface-300">{t("onboarding.upi_desc")}</span>
                                         </label>
                                         <div className="relative group">
                                             <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within:text-primary transition-colors" size={18} />
@@ -679,7 +695,7 @@ export default function OnboardingPage() {
                                         transition={{ delay: 0.45 }}
                                         className="space-y-2"
                                     >
-                                        <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">Preferred Language</label>
+                                        <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">{t("onboarding.pref_lang")}</label>
                                         <div className="relative group">
                                             <Languages className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within:text-primary transition-colors" size={18} />
                                             <select
@@ -719,8 +735,8 @@ export default function OnboardingPage() {
                                                 <Sparkles size={20} />
                                             </motion.div>
                                             <div className="space-y-0.5">
-                                                <h4 className="font-semibold text-sm text-surface-900">Almost there!</h4>
-                                                <p className="text-sm text-surface-400 leading-relaxed">Your storefront is ready to accept digital payments and orders.</p>
+                                                <h4 className="font-semibold text-sm text-surface-900">{t("onboarding.almost_there")}</h4>
+                                                <p className="text-sm text-surface-400 leading-relaxed">{t("onboarding.almost_desc")}</p>
                                             </div>
                                         </div>
                                     </motion.div>
@@ -755,10 +771,19 @@ export default function OnboardingPage() {
                     <motion.button
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.97 }}
-                        onClick={step === 3 ? () => window.location.href = '/dashboard' : nextStep}
+                        onClick={step === 3 ? () => {
+                            loginAsMerchant({
+                                shopName: formData.shopName,
+                                categories: formData.categories,
+                                phone: formData.phone,
+                                email: formData.email,
+                                address: formData.address,
+                            });
+                            router.push('/dashboard');
+                        } : nextStep}
                         className="flex-1 bg-primary hover:bg-primary-dark text-white h-12 rounded-xl text-sm font-semibold tracking-wide flex items-center justify-center gap-2 group transition-colors shadow-lg shadow-primary/20"
                     >
-                        <span>{step === 3 ? 'Launch My Store' : 'Next Step'}</span>
+                        <span>{step === 3 ? t("onboarding.launch") : t("onboarding.next_step")}</span>
                         <motion.div
                             animate={{ x: [0, 3, 0] }}
                             transition={{ duration: 1.5, repeat: Infinity }}

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/lib/context/language-context";
 
 const SHOP: any = {
     name: "Vendor Store",
@@ -29,6 +30,7 @@ const SHOP: any = {
 };
 
 export default function ShopView() {
+    const { t } = useLanguage();
     const [cart, setCart] = useState<Record<string, number>>({});
     const [isLiked, setIsLiked] = useState(false);
 
@@ -79,7 +81,7 @@ export default function ShopView() {
                 <div className="absolute bottom-20 left-0 w-full text-white">
                     <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-4">
                         <div className="flex items-center gap-3">
-                            <span className="px-5 py-2 bg-primary text-[11px] font-black rounded-xl uppercase tracking-[0.2em] shadow-accent">Verified Merchant</span>
+                            <span className="px-5 py-2 bg-primary text-[11px] font-black rounded-xl uppercase tracking-[0.2em] shadow-accent">{t("shop.verified")}</span>
                         </div>
                         <div className="max-w-3xl">
                             <h1 className="text-5xl md:text-7xl font-black mb-3 tracking-tighter leading-none">{SHOP.name}</h1>
@@ -101,8 +103,8 @@ export default function ShopView() {
                         <Phone size={28} strokeWidth={3} />
                     </div>
                     <div>
-                        <p className="font-black text-[11px] uppercase tracking-[0.2em] text-surface-900 group-hover:text-primary transition-colors">Direct Call</p>
-                        <p className="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest italic">Instant support</p>
+                        <p className="font-black text-[11px] uppercase tracking-[0.2em] text-surface-900 group-hover:text-primary transition-colors">{t("shop.call")}</p>
+                        <p className="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest italic">{t("shop.instant_support")}</p>
                     </div>
                 </a>
                 <a href="wa.me" className="md:col-span-1 glass-card p-8 flex flex-col gap-4 group hover:border-emerald-500/20 transition-all border border-border-subtle shadow-premium">
@@ -110,8 +112,8 @@ export default function ShopView() {
                         <MessageCircle size={28} strokeWidth={3} />
                     </div>
                     <div>
-                        <p className="font-black text-[11px] uppercase tracking-[0.2em] text-surface-900 group-hover:text-emerald-500 transition-colors">WhatsApp Chat</p>
-                        <p className="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest italic">Quick response</p>
+                        <p className="font-black text-[11px] uppercase tracking-[0.2em] text-surface-900 group-hover:text-emerald-500 transition-colors">{t("shop.chat")}</p>
+                        <p className="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest italic">{t("shop.quick_response")}</p>
                     </div>
                 </a>
 
@@ -119,20 +121,20 @@ export default function ShopView() {
                 <div className="md:col-span-2 glass-card p-8 text-foreground flex items-center justify-around shadow-premium relative overflow-hidden border border-border-subtle">
                     <div className="absolute left-0 top-0 w-full h-full bg-[radial-gradient(circle_at_30%_30%,var(--primary),transparent)] opacity-5" />
                     <div className="text-center relative z-10">
-                        <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2">Rating</p>
+                        <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2">{t("shop.rating")}</p>
                         <p className="text-3xl font-black flex items-center gap-2 justify-center text-surface-900">
                             <Star size={24} fill="var(--primary)" strokeWidth={0} /> {SHOP.rating}
                         </p>
                     </div>
                     <div className="w-px h-12 bg-border-subtle" />
                     <div className="text-center relative z-10">
-                        <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2">Happy Souls</p>
+                        <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2">{t("shop.happy_souls")}</p>
                         <p className="text-3xl font-black text-surface-900">{SHOP.reviews}</p>
                     </div>
                     <div className="w-px h-12 bg-border-subtle" />
                     <div className="text-center relative z-10">
-                        <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2">Service</p>
-                        <p className="text-3xl font-black italic text-surface-900">FREE</p>
+                        <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2">{t("shop.service")}</p>
+                        <p className="text-3xl font-black italic text-surface-900">{t("shop.free")}</p>
                     </div>
                 </div>
             </div>
@@ -141,8 +143,8 @@ export default function ShopView() {
             <main className="max-w-7xl mx-auto px-6 md:px-12 py-20 space-y-12">
                 <div className="flex items-center justify-between border-b-2 border-border-subtle pb-8">
                     <div>
-                        <h2 className="text-3xl md:text-5xl font-black text-surface-900 tracking-tighter uppercase">High-Performance Produce</h2>
-                        <p className="text-base font-bold text-muted italic mt-2">Quality checked and ready for rapid local fulfillment.</p>
+                        <h2 className="text-3xl md:text-5xl font-black text-surface-900 tracking-tighter uppercase">{t("shop.produce_title")}</h2>
+                        <p className="text-base font-bold text-muted italic mt-2">{t("shop.produce_desc")}</p>
                     </div>
                     <button className="hidden md:flex w-16 h-16 bg-card-bg rounded-3xl items-center justify-center shadow-premium hover:border-primary/20 transition-all">
                         <Info size={28} className="text-surface-300" />
@@ -162,7 +164,7 @@ export default function ShopView() {
                             <div className="flex-1 flex flex-col pt-2">
                                 <div className="space-y-1 mb-6">
                                     <h4 className="font-black text-surface-900 text-2xl tracking-tighter leading-tight group-hover:text-primary transition-colors">{product.name}</h4>
-                                    <p className="text-[11px] font-black text-muted uppercase tracking-[0.2em] italic">Fresh Stock — {product.unit}</p>
+                                    <p className="text-[11px] font-black text-muted uppercase tracking-[0.2em] italic">{t("shop.fresh_stock", product.unit)}</p>
                                 </div>
 
                                 <div className="mt-auto flex justify-between items-center bg-surface-50 p-4 rounded-3xl shadow-inner border border-border-subtle">
@@ -210,8 +212,8 @@ export default function ShopView() {
                                 <ShoppingCart size={48} />
                             </div>
                             <div className="space-y-2 px-6">
-                                <p className="text-2xl font-black text-surface-900 tracking-tight">Storefront Empty</p>
-                                <p className="text-sm font-bold text-muted italic">This vendor hasn&apos;t uploaded their high-performance produce yet. <br className="hidden md:block" /> Stay tuned for live inventory updates.</p>
+                                <p className="text-2xl font-black text-surface-900 tracking-tight">{t("shop.empty")}</p>
+                                <p className="text-sm font-bold text-muted italic">{t("shop.empty_desc")}</p>
                             </div>
                         </div>
                     )}
@@ -233,15 +235,15 @@ export default function ShopView() {
                                     <ShoppingCart size={28} strokeWidth={3} />
                                 </div>
                                 <div>
-                                    <p className="font-black text-contrast-text text-2xl tracking-tighter leading-none">{cartTotalCount} Items</p>
-                                    <p className="text-[11px] font-black text-primary uppercase tracking-[0.3em] mt-2">Manifest Total: ₹{cartTotalPrice.toLocaleString()}</p>
+                                    <p className="font-black text-contrast-text text-2xl tracking-tighter leading-none">{t("shop.items_count", cartTotalCount)}</p>
+                                    <p className="text-[11px] font-black text-primary uppercase tracking-[0.3em] mt-2">{t("shop.total", cartTotalPrice.toLocaleString())}</p>
                                 </div>
                             </div>
                             <Link
                                 href="/checkout"
                                 className="bg-primary hover:bg-primary-dark text-white px-10 h-16 rounded-2xl font-black text-xs uppercase tracking-[0.3em] shadow-accent flex items-center gap-4 group transition-all"
                             >
-                                Secure Checkout
+                                {t("shop.checkout")}
                                 <ChevronRight size={20} strokeWidth={3} className="group-hover:translate-x-2 transition-transform" />
                             </Link>
                         </div>

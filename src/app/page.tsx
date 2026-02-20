@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Store, ShoppingBag, ShieldCheck, ChevronRight, Zap, Users, Globe, Menu, X } from "lucide-react";
+import { ArrowRight, Store, ShoppingBag, ShieldCheck, ChevronRight, Zap, Users, Globe, Menu, X, LogIn } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useAuth } from "@/lib/context/auth-context";
+import { useLanguage } from "@/lib/context/language-context";
 
 const navLinks = [
   { href: "/search", label: "Markets" },
@@ -24,6 +26,16 @@ const fadeUp = {
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isMerchant, isLoggedIn } = useAuth();
+  const { t } = useLanguage();
+
+  // Nav links are now dynamic inside the component
+  const navLinks = [
+    { href: "/search", label: t("nav.explorer") },
+    { href: "/onboarding", label: t("onboarding.register") || "Register" },
+    { href: "/support", label: t("nav.support") || "Support" },
+    { href: "/settings", label: t("nav.settings") },
+  ];
 
   return (
     <div className="min-h-screen bg-surface-50 flex flex-col overflow-x-hidden">
@@ -133,21 +145,54 @@ export default function LandingPage() {
                     </Link>
                   </motion.div>
                 ))}
-                <motion.div
-                  initial={{ opacity: 0, x: -15 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.25, duration: 0.3 }}
-                  className="pt-2 border-t border-surface-100 mt-2"
-                >
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between p-3 rounded-xl hover:bg-surface-50 transition-all text-sm font-medium text-primary"
-                  >
-                    Merchant Dashboard
-                    <ArrowRight size={14} />
-                  </Link>
-                </motion.div>
+                <div className="pt-2 border-t border-surface-100 mt-2">
+                  {isMerchant ? (
+                    <motion.div
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.25, duration: 0.3 }}
+                    >
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-all text-sm font-bold text-primary"
+                      >
+                        {t("nav.dashboard_btn")}
+                        <ArrowRight size={14} />
+                      </Link>
+                    </motion.div>
+                  ) : isLoggedIn ? (
+                    <motion.div
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.25, duration: 0.3 }}
+                    >
+                      <Link
+                        href="/onboarding"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-all text-sm font-bold text-primary"
+                      >
+                        {t("nav.register_btn")}
+                        <ArrowRight size={14} />
+                      </Link>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, x: -15 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.25, duration: 0.3 }}
+                    >
+                      <Link
+                        href="/login"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-all text-sm font-bold text-primary"
+                      >
+                        {t("nav.login_btn")}
+                        <LogIn size={14} />
+                      </Link>
+                    </motion.div>
+                  )}
+                </div>
               </nav>
             </motion.div>
           )}
@@ -181,21 +226,9 @@ export default function LandingPage() {
                 variants={fadeUp}
                 initial="hidden"
                 animate="visible"
-                className="text-4xl md:text-7xl font-black leading-[0.9] text-surface-900 tracking-tighter"
+                className="text-4xl md:text-7xl font-black leading-tight text-surface-900 tracking-tighter"
               >
-                Local <br />
-                <motion.span
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5, duration: 0.6 }}
-                  className="text-primary italic inline-block"
-                >Heartbeat.</motion.span> <br />
-                <motion.span
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.7, duration: 0.6 }}
-                  className="inline-block"
-                >Linked.</motion.span>
+                {t("landing.title")}
               </motion.h1>
 
               <motion.p
@@ -205,7 +238,7 @@ export default function LandingPage() {
                 animate="visible"
                 className="text-muted font-medium text-base md:text-lg leading-relaxed max-w-lg"
               >
-                The heart of your neighborhood, digitally linked. Connecting local vendors with modern shoppers through power and elegance.
+                {t("landing.subtitle")}
               </motion.p>
 
               {/* Stats moved here for desktop flow */}

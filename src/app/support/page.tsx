@@ -4,20 +4,7 @@ import { ArrowLeft, MessageCircle, Mail, Phone, ChevronRight, HelpCircle, FileTe
 import Link from "next/link";
 import { motion } from "framer-motion";
 import ThemeToggle from "@/components/ThemeToggle";
-
-const faqs = [
-    { q: "How do I register my shop?", a: "Go to the Register page and follow the 3-step onboarding process. It takes less than 60 seconds." },
-    { q: "How do customers find my shop?", a: "Once registered, your shop appears on the Market Explorer. Customers nearby can discover and order from you." },
-    { q: "Is there a commission fee?", a: "Localynk charges a minimal platform fee of 2% per transaction. No hidden charges." },
-    { q: "How do I receive payments?", a: "Payments are settled directly to your linked bank account within 24 hours of order completion." },
-    { q: "Can I manage my inventory?", a: "Yes! Use the Products page in your dashboard to add, edit, or remove items from your catalog." },
-];
-
-const contactOptions = [
-    { icon: MessageCircle, label: "Live Chat", desc: "Chat with our team", color: "#22C55E", bg: "rgba(34,197,94,0.1)" },
-    { icon: Mail, label: "Email Us", desc: "support@localynk.in", color: "#3B82F6", bg: "rgba(59,130,246,0.1)" },
-    { icon: Phone, label: "Call Us", desc: "+91 1800-XXX-XXXX", color: "#F59E0B", bg: "rgba(245,158,11,0.1)" },
-];
+import { useLanguage } from "@/lib/context/language-context";
 
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -39,6 +26,22 @@ const scaleIn = {
 };
 
 export default function SupportPage() {
+    const { t } = useLanguage();
+
+    const faqs = [
+        { q: t("support.faq.q1"), a: t("support.faq.a1") },
+        { q: t("support.faq.q2"), a: t("support.faq.a2") },
+        { q: t("support.faq.q3"), a: t("support.faq.a3") },
+        { q: t("support.faq.q4"), a: t("support.faq.a4") },
+        { q: t("support.faq.q5"), a: t("support.faq.a5") },
+    ];
+
+    const contactOptions = [
+        { icon: MessageCircle, label: t("support.contact.chat"), desc: t("support.contact.chat_desc"), color: "#22C55E", bg: "rgba(34,197,94,0.1)" },
+        { icon: Mail, label: t("support.contact.email"), desc: t("support.contact.email_desc"), color: "#3B82F6", bg: "rgba(59,130,246,0.1)" },
+        { icon: Phone, label: t("support.contact.call"), desc: t("support.contact.call_desc"), color: "#F59E0B", bg: "rgba(245,158,11,0.1)" },
+    ];
+
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
@@ -56,8 +59,8 @@ export default function SupportPage() {
                             </Link>
                         </motion.div>
                         <div>
-                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Help Center</p>
-                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">Support</h1>
+                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">{t("support.title")}</p>
+                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">{t("support.subtitle")}</h1>
                         </div>
                     </div>
                     <ThemeToggle />
@@ -68,7 +71,7 @@ export default function SupportPage() {
 
                 {/* Contact Options */}
                 <motion.section custom={0} variants={fadeUp} initial="hidden" animate="visible" className="space-y-3">
-                    <h2 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">Get in Touch</h2>
+                    <h2 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">{t("support.get_touch")}</h2>
                     <div className="grid sm:grid-cols-3 gap-3">
                         {contactOptions.map((opt, i) => {
                             const Icon = opt.icon;
@@ -108,7 +111,7 @@ export default function SupportPage() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4 }}
                         className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5"
-                    >Frequently Asked Questions</motion.h2>
+                    >{t("support.faq")}</motion.h2>
                     <div className="space-y-2">
                         {faqs.map((faq, i) => (
                             <motion.details
@@ -140,11 +143,11 @@ export default function SupportPage() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.8 }}
                         className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5"
-                    >Resources</motion.h2>
+                    >{t("support.resources")}</motion.h2>
                     <div className="space-y-2">
                         {[
-                            { icon: FileText, label: "Terms of Service", desc: "Read our terms" },
-                            { icon: Shield, label: "Privacy Policy", desc: "How we protect your data" },
+                            { icon: FileText, label: t("support.res.tos"), desc: t("support.res.tos_desc") },
+                            { icon: Shield, label: t("support.res.privacy"), desc: t("support.res.privacy_desc") },
                         ].map((item, i) => {
                             const Icon = item.icon;
                             return (
