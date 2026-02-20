@@ -45,15 +45,34 @@ export async function POST(req: Request) {
             systemInstruction: SYSTEM_PROMPT,
         });
 
-        const chatHistory = (history || [])
+        // Filter history: remove empty messages, ensure proper alternation
+        // Gemini requires history to start with "user" role
+        const rawHistory = (history || [])
             .filter((h: any) => h.content && h.content.trim())
             .map((h: any) => ({
                 role: h.role === "user" ? "user" : "model",
                 parts: [{ text: h.content }],
             }));
 
+        // Ensure history starts with a user message (Gemini requirement)
+        const validHistory: any[] = [];
+        let lastRole = "";
+        for (const entry of rawHistory) {
+            // Skip if first entry is "model" (our hardcoded greeting)
+            if (validHistory.length === 0 && entry.role === "model") continue;
+            // Skip consecutive same roles
+            if (entry.role === lastRole) continue;
+            validHistory.push(entry);
+            lastRole = entry.role;
+        }
+
+        // Ensure history ends with "model" (not "user"), since we're about to send a user message
+        if (validHistory.length > 0 && validHistory[validHistory.length - 1].role === "user") {
+            validHistory.pop();
+        }
+
         const chat = model.startChat({
-            history: chatHistory,
+            history: validHistory,
             generationConfig: {
                 maxOutputTokens: 1000,
             },
