@@ -64,6 +64,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .single();
 
             if (profileError || !profile) {
+                // FALLBACK: If profile doesn't exist in table, create it manually
+                // This handles cases where the SQL trigger might have failed
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    const { data: newProfile, error: createError } = await supabase
+                        .from('profiles')
+                        .upsert({
+                            id: session.user.id,
+                            full_name: session.user.user_metadata?.full_name || 'User',
+                            email: session.user.email,
+                            role: 'user'
+                        })
+                        .select()
+                        .single();
+
+                    if (createError) {
+                        console.error("Critical: Failed to auto-create profile:", createError);
+                        return;
+                    }
+
+                    // Recursive call to proceed with the new profile
+                    await fetchProfile(userId);
+                    return;
+                }
                 console.error("Error fetching profile:", profileError);
                 return;
             }
