@@ -88,23 +88,22 @@ export default function CustomerDiscovery() {
         <div className="min-h-screen bg-background">
             <Navbar />
 
-            <div className="max-w-3xl mx-auto px-5 md:px-8 pt-6 pb-4">
+            <div className="max-w-7xl mx-auto px-5 md:px-12 pt-6 pb-4">
                 <motion.div
                     initial={{ opacity: 0, x: -15 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1, duration: 0.4 }}
-                    className="flex items-center gap-3 mb-6"
+                    className="flex items-center gap-3 mb-8"
                 >
                     <motion.div
                         animate={{ y: [0, -2, 0] }}
                         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                        className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center"
+                        className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-lg shadow-primary/5"
                     >
-                        <Compass size={18} />
+                        <Compass size={24} />
                     </motion.div>
                     <div>
-                        <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">{t("explorer.title")}</p>
-                        <h1 className="text-sm font-bold text-surface-900 tracking-tight">{t("explorer.subtitle") || "Nearby Shops"}</h1>
+                        <h1 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">{t("explorer.subtitle") || "Nearby Shops"}</h1>
                     </div>
                 </motion.div>
 
@@ -127,7 +126,7 @@ export default function CustomerDiscovery() {
             </div>
 
             <main className="w-full pb-24">
-                <div className="max-w-3xl mx-auto px-5 md:px-8 space-y-6 pt-2">
+                <div className="max-w-7xl mx-auto px-5 md:px-12 space-y-8 pt-2">
 
                     {/* Category Tabs */}
                     <motion.div
