@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/lib/context/theme-context";
 import { AuthProvider } from "@/lib/context/auth-context";
 import { LanguageProvider } from "@/lib/context/language-context";
+import VendorAssistant from "@/components/AI/VendorAssistant";
 
 
 const inter = Inter({
@@ -56,6 +57,7 @@ export default function RootLayout({
             <LanguageProvider>
               <div className="app-container">
                 {children}
+                <VendorAssistant />
               </div>
             </LanguageProvider>
           </AuthProvider>
