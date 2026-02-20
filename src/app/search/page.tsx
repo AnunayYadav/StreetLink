@@ -1,177 +1,261 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, Star, SlidersHorizontal, ArrowRight } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, Utensils } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
 const VENDORS: any[] = [];
 
+const categories = [
+    { key: "all", label: "All" },
+    { key: "food", label: "Street Food" },
+    { key: "snacks", label: "Snacks" },
+    { key: "fresh", label: "Fresh Produce" },
+    { key: "drinks", label: "Drinks" },
+    { key: "desserts", label: "Desserts" },
+    { key: "grocery", label: "Grocery" },
+];
+
+const trendingSearches = ["Samosa", "Lassi", "Momos", "Kachori", "Masala Chai", "Paneer Tikka", "Biryani", "Jalebi"];
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+        opacity: 1,
+        y: 0,
+        transition: { delay: i * 0.07, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }
+    })
+};
+
+const staggerContainer = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.04 } }
+};
+
+const chipVariant = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1, transition: { type: "spring" as const, stiffness: 300, damping: 20 } }
+};
+
 export default function CustomerDiscovery() {
-    const [activeCategory, setActiveCategory] = useState("All");
+    const [activeCategory, setActiveCategory] = useState("all");
+    const [searchQuery, setSearchQuery] = useState("");
 
     return (
-        <div className="min-h-screen bg-surface-50">
-            {/* Top Bar */}
-            <header className="sticky top-0 bg-surface-50/90 backdrop-blur-md z-30 border-b border-border-subtle">
-                <div className="max-w-7xl mx-auto px-6 md:px-12 pt-10 pb-6 w-full grid lg:grid-cols-2 gap-6 items-center">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-primary shadow-inner border border-primary/10">
-                                <MapPin size={24} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] opacity-80 italic">Market Explorer</p>
-                                <h1 className="text-xl font-black text-surface-900 tracking-tighter">Locating Neighbors...</h1>
-                            </div>
+        <div className="min-h-screen bg-background">
+            {/* Header */}
+            <motion.header
+                initial={{ opacity: 0, y: -15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="sticky top-0 bg-background/90 backdrop-blur-xl z-30"
+            >
+                <div className="max-w-3xl mx-auto px-5 md:px-8 pt-6 pb-4">
+                    <motion.div
+                        initial={{ opacity: 0, x: -15 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1, duration: 0.4 }}
+                        className="flex items-center gap-3 mb-4"
+                    >
+                        <motion.div
+                            animate={{ y: [0, -2, 0] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                            className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center"
+                        >
+                            <MapPin size={18} />
+                        </motion.div>
+                        <div>
+                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Market Explorer</p>
+                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">Discover Nearby</h1>
                         </div>
-                        <button className="lg:hidden w-12 h-12 bg-card-bg rounded-2xl flex items-center justify-center shadow-premium border border-border-subtle active:scale-95 transition-all">
-                            <SlidersHorizontal size={20} className="text-surface-900" />
-                        </button>
-                    </div>
+                    </motion.div>
 
                     {/* Search Bar */}
-                    <div className="flex items-center gap-4">
-                        <div className="relative group flex-1">
-                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-primary transition-colors" size={24} />
-                            <input
-                                type="text"
-                                placeholder="Search neighborhood artisans..."
-                                className="w-full h-16 pl-16 pr-8 rounded-3xl glass-card shadow-premium border border-border-subtle outline-none font-bold text-lg text-surface-900 placeholder:text-surface-300 focus:border-primary/40 focus:ring-8 focus:ring-primary/5 transition-all"
-                            />
-                        </div>
-                        <button className="hidden lg:flex w-16 h-16 glass rounded-3xl items-center justify-center shadow-premium border border-border-subtle hover:border-primary/20 active:scale-95 transition-all">
-                            <SlidersHorizontal size={24} className="text-surface-900" />
-                        </button>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.4 }}
+                        className="relative"
+                    >
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-300" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search shops, food, products..."
+                            className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </motion.div>
                 </div>
-            </header>
+            </motion.header>
 
-            <main className="w-full pb-32 pt-10">
-                <div className="max-w-7xl mx-auto px-6 md:px-12">
-                    {/* Categories */}
-                    <div className="mb-12 overflow-x-auto no-scrollbar flex gap-4">
-                        {["All", "Fast Food", "Snacks", "Healthy", "Desserts", "Traditional", "Organic"].map((cat) => (
-                            <button
-                                key={cat}
-                                onClick={() => setActiveCategory(cat)}
-                                className={`px-6 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 border-2 shrink-0 ${activeCategory === cat
-                                    ? "bg-primary text-white border-primary shadow-accent"
-                                    : "bg-card-bg text-surface-500 border-border-subtle shadow-premium hover:border-primary/20"
-                                    }`}
+            <main className="w-full pb-24">
+                <div className="max-w-3xl mx-auto px-5 md:px-8 space-y-6 pt-2">
+
+                    {/* Category Tabs */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.25, duration: 0.4 }}
+                        className="overflow-x-auto no-scrollbar -mx-5 px-5"
+                    >
+                        <div className="flex gap-2">
+                            {categories.map((cat, i) => (
+                                <motion.button
+                                    key={cat.key}
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.3 + i * 0.04, type: "spring", stiffness: 300, damping: 20 }}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setActiveCategory(cat.key)}
+                                    className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors shrink-0 ${activeCategory === cat.key
+                                        ? "bg-primary text-white shadow-lg shadow-primary/20"
+                                        : "bg-surface-50 text-surface-500 hover:text-surface-700"
+                                        }`}
+                                >
+                                    {cat.label}
+                                </motion.button>
+                            ))}
+                        </div>
+                    </motion.div>
+
+                    {/* Featured Banner */}
+                    <motion.section
+                        custom={1}
+                        variants={fadeUp}
+                        initial="hidden"
+                        animate="visible"
+                        className="rounded-2xl h-48 md:h-56 relative overflow-hidden group"
+                    >
+                        <img
+                            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200"
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2000ms]"
+                            alt="Featured"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5, duration: 0.6 }}
+                            className="absolute bottom-5 left-5 right-5 text-white space-y-1.5"
+                        >
+                            <motion.div
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.6 }}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary rounded-md text-[9px] font-semibold uppercase tracking-wider"
                             >
-                                {cat}
-                            </button>
+                                <Star size={10} fill="currentColor" strokeWidth={0} />
+                                Featured Today
+                            </motion.div>
+                            <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">Authentic Mughlai Street Flavors</h2>
+                            <p className="text-white/60 text-xs max-w-sm">Experience the legendary spice blends of Kanpur&apos;s most celebrated street artisan.</p>
+                        </motion.div>
+                    </motion.section>
+
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-3 gap-3">
+                        {[
+                            { val: "0", label: "Shops Nearby", color: "" },
+                            { val: "--", label: "Avg. Value", color: "" },
+                            { val: "Live", label: "Market Status", color: "text-primary" },
+                        ].map((stat, i) => (
+                            <motion.div
+                                key={stat.label}
+                                custom={2 + i}
+                                variants={fadeUp}
+                                initial="hidden"
+                                animate="visible"
+                                whileHover={{ y: -2 }}
+                                className="bg-surface-50 rounded-xl p-3 text-center"
+                            >
+                                <p className={`text-lg font-bold text-surface-900 ${stat.color}`}>{stat.val}</p>
+                                <p className="text-[10px] text-surface-400">{stat.label}</p>
+                            </motion.div>
                         ))}
                     </div>
 
-                    <div className="grid lg:grid-cols-12 gap-12">
-                        {/* Featured Column */}
-                        <div className="lg:col-span-8">
-                            <section className="mb-12">
-                                <div className="card-elevated bg-surface-900 h-[350px] relative overflow-hidden group shadow-2xl">
-                                    <img
-                                        src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200"
-                                        className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-[2000ms]"
-                                        alt="Featured"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-surface-900 via-surface-900/20 to-transparent" />
-                                    <div className="absolute bottom-10 left-10 right-10 text-white space-y-4">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-[10px] font-black uppercase tracking-[0.2em] rounded-full">
-                                            <Star size={12} fill="currentColor" strokeWidth={0} />
-                                            Featured Today
-                                        </div>
-                                        <h2 className="text-5xl font-black tracking-tighter leading-[0.9]">Authentic Mughlai <br /> Street Flavors</h2>
-                                        <p className="text-white/60 text-sm font-bold italic max-w-md">Experience the legendary spice blends of Kanpur&apos;s most celebrated street artisan.</p>
-                                    </div>
-                                </div>
-                            </section>
+                    {/* Trending Searches */}
+                    <motion.section custom={5} variants={fadeUp} initial="hidden" animate="visible" className="space-y-2.5">
+                        <h3 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">Trending</h3>
+                        <motion.div
+                            variants={staggerContainer}
+                            initial="hidden"
+                            animate="visible"
+                            className="flex flex-wrap gap-2"
+                        >
+                            {trendingSearches.map(tag => (
+                                <motion.button
+                                    key={tag}
+                                    variants={chipVariant}
+                                    whileHover={{ scale: 1.08, y: -1 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="px-3 py-1.5 bg-surface-50 hover:bg-surface-100 rounded-lg text-xs font-medium text-surface-500 hover:text-primary transition-colors"
+                                >
+                                    {tag}
+                                </motion.button>
+                            ))}
+                        </motion.div>
+                    </motion.section>
 
-                            <section className="space-y-8">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-black text-surface-900 uppercase tracking-widest">Recommended Mix</h3>
-                                    <p className="text-[10px] font-black text-muted uppercase tracking-widest italic">Sorted by Distance</p>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    {VENDORS.length > 0 ? VENDORS.map(vendor => (
-                                        <Link key={vendor.id} href={`/shop/${vendor.id}`}>
-                                            <motion.div
-                                                whileTap={{ scale: 0.98 }}
-                                                className="card-premium p-6 flex flex-col gap-6 group relative bg-card-bg shadow-elevated border-2 border-transparent hover:border-primary/20 transition-all"
-                                            >
-                                                <div className="w-full h-48 rounded-[32px] overflow-hidden bg-surface-50 shadow-inner">
-                                                    <img src={vendor.image} alt={vendor.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                                </div>
-                                                <div className="space-y-4">
-                                                    <div className="flex justify-between items-start">
-                                                        <div>
-                                                            <h4 className="font-black text-surface-900 text-2xl tracking-tighter mb-1">{vendor.name}</h4>
-                                                            <p className="text-[11px] font-black text-muted italic uppercase tracking-widest">{vendor.category} • {vendor.distance}</p>
-                                                        </div>
-                                                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-soft text-primary rounded-xl text-[11px] font-black border border-primary/10">
-                                                            <Star size={14} fill="currentColor" strokeWidth={0} />
-                                                            {vendor.rating}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center justify-between pt-2 border-t border-border-subtle">
-                                                        <span className="text-sm font-black text-surface-400 uppercase tracking-widest">{vendor.priceRange} Average</span>
-                                                        <div className="w-10 h-10 bg-surface-50 rounded-2xl flex items-center justify-center text-surface-300 group-hover:bg-primary group-hover:text-white transition-all">
-                                                            <ArrowRight size={20} />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        </Link>
-                                    )) : (
-                                        <div className="col-span-full py-20 flex flex-col items-center justify-center text-center space-y-6 bg-card-bg rounded-[32px] border-2 border-dashed border-border-subtle shadow-inner">
-                                            <div className="w-24 h-24 bg-surface-50 rounded-full flex items-center justify-center text-surface-200">
-                                                <Search size={48} />
-                                            </div>
-                                            <div className="space-y-2 px-6">
-                                                <p className="text-2xl font-black text-surface-900 tracking-tight">No Vendors Active</p>
-                                                <p className="text-sm font-bold text-muted italic">Local micro-markets are currently resting. <br className="hidden md:block" /> Check back during peak street hours.</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </section>
+                    {/* Vendor List */}
+                    <motion.section custom={6} variants={fadeUp} initial="hidden" animate="visible" className="space-y-3">
+                        <div className="flex items-center justify-between ml-0.5">
+                            <h3 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider">Nearby Shops</h3>
+                            <span className="text-[10px] text-surface-300">Sorted by distance</span>
                         </div>
 
-                        {/* Side Column: Trending/Stats (Hidden on mobile) */}
-                        <div className="hidden lg:block lg:col-span-4 space-y-12">
-                            <section className="p-8 glass-card text-foreground relative overflow-hidden group shadow-elevated rounded-[32px] border border-border-subtle">
-                                <div className="absolute right-0 top-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                                <div className="relative z-10 space-y-6">
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Local Insights</h4>
-                                    <div className="space-y-8">
-                                        <div className="space-y-1">
-                                            <p className="text-4xl font-black tracking-tighter text-surface-900">0</p>
-                                            <p className="text-[10px] font-black text-muted uppercase tracking-widest">Active Shops Nearby</p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-4xl font-black tracking-tighter text-surface-900">--</p>
-                                            <p className="text-[10px] font-black text-muted uppercase tracking-widest">Average Value</p>
-                                        </div>
-                                    </div>
-                                    <button className="w-full py-5 glass bg-primary/10 text-primary border border-primary/20 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] hover:bg-primary hover:text-white transition-all">
-                                        Open Marketplace Map
-                                    </button>
-                                </div>
-                            </section>
-
-                            <section className="space-y-6">
-                                <h3 className="text-[10px] font-black text-surface-900 uppercase tracking-[0.3em] ml-2">Trending Searches</h3>
-                                <div className="flex flex-wrap gap-3">
-                                    {["Samosa", "Lassi", "Momos", "Kachori", "Masala Chai", "Paneer Tikka"].map(tag => (
-                                        <span key={tag} className="px-5 py-3 bg-card-bg border border-border-subtle rounded-2xl text-[11px] font-black text-surface-500 hover:border-primary/20 hover:text-primary transition-all cursor-pointer">
-                                            # {tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            </section>
-                        </div>
-                    </div>
+                        {VENDORS.length > 0 ? (
+                            <div className="space-y-3">
+                                {VENDORS.map((vendor, i) => (
+                                    <Link key={vendor.id} href={`/shop/${vendor.id}`}>
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: i * 0.08, duration: 0.4 }}
+                                            whileHover={{ x: 4 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            className="bg-surface-50 rounded-2xl p-3 flex gap-3 items-center hover:bg-surface-100 transition-colors"
+                                        >
+                                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-100 shrink-0">
+                                                <img src={vendor.image} alt={vendor.name} className="w-full h-full object-cover" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-sm text-surface-900 truncate">{vendor.name}</h4>
+                                                <p className="text-xs text-surface-400 mt-0.5">{vendor.category} • {vendor.distance}</p>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                                <div className="flex items-center gap-1 text-xs font-medium text-primary">
+                                                    <Star size={12} fill="currentColor" strokeWidth={0} />
+                                                    {vendor.rating}
+                                                </div>
+                                                <span className="text-[10px] text-surface-400">{vendor.priceRange}</span>
+                                            </div>
+                                        </motion.div>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.5, type: "spring" }}
+                                className="py-14 flex flex-col items-center justify-center text-center"
+                            >
+                                <motion.div
+                                    animate={{ rotate: [0, 5, -5, 0], y: [0, -3, 0] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                    className="w-14 h-14 bg-surface-50 rounded-2xl flex items-center justify-center text-surface-300 mb-4"
+                                >
+                                    <Utensils size={24} />
+                                </motion.div>
+                                <p className="font-semibold text-sm text-surface-900 mb-1">No vendors nearby</p>
+                                <p className="text-sm text-surface-400 max-w-xs">Local shops will appear here when they&apos;re active. Check back during peak hours.</p>
+                            </motion.div>
+                        )}
+                    </motion.section>
                 </div>
             </main>
         </div>

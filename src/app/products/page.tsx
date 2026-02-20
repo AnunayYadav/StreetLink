@@ -10,18 +10,27 @@ import {
     LayoutGrid,
     ChevronRight,
     TrendingUp,
-    Tag,
     CircleCheck,
-    CircleAlert
+    Package
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 const INITIAL_PRODUCTS: any[] = [];
 
+const fadeUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+        opacity: 1,
+        y: 0,
+        transition: { delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }
+    })
+};
+
 export default function ProductManagement() {
     const [products, setProducts] = useState(INITIAL_PRODUCTS);
     const [isAdding, setIsAdding] = useState(false);
+    const [activeFilter, setActiveFilter] = useState("all");
     const [newProduct, setNewProduct] = useState({ name: "", price: "", unit: "kg" });
 
     const addProduct = () => {
@@ -46,141 +55,180 @@ export default function ProductManagement() {
         setProducts(products.map(p => p.id === id ? { ...p, isAvailable: !p.isAvailable } : p));
     };
 
+    const filters = [
+        { key: "all", label: "All Items" },
+        { key: "live", label: "Live" },
+        { key: "draft", label: "Draft" },
+    ];
+
+    const filteredProducts = products.filter(p => {
+        if (activeFilter === "live") return p.isAvailable;
+        if (activeFilter === "draft") return !p.isAvailable;
+        return true;
+    });
+
     return (
-        <div className="min-h-screen bg-surface-50 pb-40">
-            <header className="sticky top-0 bg-surface-50/80 backdrop-blur-md z-30 border-b border-border-subtle">
-                <div className="max-w-7xl mx-auto px-6 md:px-12 pt-10 pb-6 flex items-center justify-between w-full">
-                    <div className="flex items-center gap-4">
-                        <Link href="/dashboard" className="w-12 h-12 bg-card-bg text-surface-900 rounded-2xl flex items-center justify-center shadow-premium border border-border-subtle hover:border-primary/30 active:scale-95 transition-all">
-                            <ArrowLeft size={24} />
-                        </Link>
+        <div className="min-h-screen bg-background pb-24">
+            {/* Header */}
+            <motion.header
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="sticky top-0 bg-background/90 backdrop-blur-xl z-30"
+            >
+                <div className="max-w-3xl mx-auto px-5 md:px-8 pt-6 pb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <motion.div whileHover={{ x: -2 }} whileTap={{ scale: 0.9 }}>
+                            <Link href="/dashboard" className="w-10 h-10 bg-surface-50 text-surface-500 rounded-xl flex items-center justify-center hover:text-surface-900 transition-colors">
+                                <ArrowLeft size={18} />
+                            </Link>
+                        </motion.div>
                         <div>
-                            <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] opacity-80 italic">Inventory Management</p>
-                            <h1 className="text-2xl font-black text-surface-900 tracking-tighter uppercase">My Catalog</h1>
+                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Inventory</p>
+                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">My Catalog</h1>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <button className="hidden md:flex items-center gap-2 px-6 h-12 bg-surface-900 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-premium active:scale-95 transition-all">
-                            <Tag size={16} className="text-primary" />
-                            Categories
-                        </button>
-                        <button
-                            onClick={() => setIsAdding(true)}
-                            className="h-12 px-6 md:px-8 bg-primary text-white rounded-2xl flex items-center justify-center gap-3 shadow-accent active:scale-95 transition-all"
-                        >
-                            <Plus size={24} strokeWidth={3} />
-                            <span className="hidden sm:inline font-black text-xs uppercase tracking-widest">Add Item</span>
-                        </button>
-                    </div>
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setIsAdding(true)}
+                        className="h-10 px-4 bg-primary text-white rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                    >
+                        <Plus size={16} strokeWidth={2.5} />
+                        <span className="text-xs font-semibold hidden sm:inline">Add Item</span>
+                    </motion.button>
                 </div>
-            </header>
+            </motion.header>
 
-            <main className="w-full pt-10">
-                <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-12">
-                    <div className="grid lg:grid-cols-12 gap-10 items-start">
-                        {/* Summary Column */}
-                        <div className="lg:col-span-3 space-y-8">
-                            <div className="p-8 glass-card text-foreground relative overflow-hidden group shadow-elevated rounded-[32px] border border-border-subtle">
-                                <div className="absolute right-0 top-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                                <div className="relative z-10 space-y-8">
-                                    <div className="w-14 h-14 glass text-primary rounded-2xl flex items-center justify-center border border-primary/20 shadow-accent">
-                                        <TrendingUp size={28} />
+            <main className="w-full pt-2">
+                <div className="max-w-3xl mx-auto px-5 md:px-8 space-y-5">
+
+                    {/* Stats Row */}
+                    <div className="grid grid-cols-3 gap-3">
+                        {[
+                            { icon: Package, val: products.length, label: "Total Items", color: "bg-primary/10 text-primary" },
+                            { icon: CircleCheck, val: products.filter(p => p.isAvailable).length, label: "Live", color: "bg-emerald-500/10 text-emerald-500" },
+                            { icon: TrendingUp, val: "0%", label: "Growth", color: "bg-amber-500/10 text-amber-500" },
+                        ].map((stat, i) => {
+                            const Icon = stat.icon;
+                            return (
+                                <motion.div
+                                    key={stat.label}
+                                    custom={i}
+                                    variants={fadeUp}
+                                    initial="hidden"
+                                    animate="visible"
+                                    whileHover={{ y: -2 }}
+                                    className="bg-surface-50 rounded-2xl p-4"
+                                >
+                                    <div className={`w-8 h-8 rounded-lg ${stat.color} flex items-center justify-center mb-2`}>
+                                        <Icon size={16} />
                                     </div>
-                                    <div className="space-y-4">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Catalog Health</h4>
-                                        <div className="space-y-2">
-                                            <p className="text-5xl font-black text-surface-900 tracking-tighter">{products.length}</p>
-                                            <p className="text-[10px] font-black text-muted uppercase tracking-widest italic leading-relaxed">Active high-performance listings</p>
-                                        </div>
-                                    </div>
-                                    <div className="pt-6 border-t border-border-subtle">
-                                        <p className="text-[10px] font-black text-muted uppercase tracking-widest italic leading-none">Catalog status: Synchronized</p>
-                                    </div>
-                                </div>
-                            </div>
+                                    <p className="text-2xl font-bold text-surface-900 tracking-tight">{stat.val}</p>
+                                    <p className="text-[10px] text-surface-400 mt-0.5">{stat.label}</p>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
 
-                            <div className="space-y-4 px-2">
-                                <h3 className="text-[10px] font-black text-surface-400 uppercase tracking-[0.3em]">Catalog Filters</h3>
-                                <div className="space-y-3">
-                                    {["In Stock", "Out of Stock", "Featured"].map(filter => (
-                                        <button key={filter} className="w-full flex items-center justify-between p-4 rounded-xl bg-card-bg border border-border-subtle text-[11px] font-black uppercase tracking-widest text-surface-500 hover:border-primary/20 transition-all">
-                                            {filter}
-                                            <div className="w-2 h-2 rounded-full bg-surface-200" />
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* List Column */}
-                        <div className="lg:col-span-9 space-y-8">
-                            <div className="flex items-center justify-between px-1">
-                                <h2 className="text-[10px] font-black text-surface-900 uppercase tracking-widest leading-none">Catalog Hub — Grid View</h2>
-                                <div className="flex gap-4">
-                                    <button className="w-10 h-10 bg-surface-900 text-white rounded-xl flex items-center justify-center shadow-premium"><LayoutGrid size={20} /></button>
-                                </div>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {products.length > 0 ? products.map((product) => (
+                    {/* Filter Tabs */}
+                    <motion.div custom={3} variants={fadeUp} initial="hidden" animate="visible" className="flex gap-1.5 bg-surface-50 p-1 rounded-xl">
+                        {filters.map(f => (
+                            <button
+                                key={f.key}
+                                onClick={() => setActiveFilter(f.key)}
+                                className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all relative ${activeFilter === f.key
+                                    ? 'text-surface-900 shadow-sm'
+                                    : 'text-surface-400 hover:text-surface-500'
+                                    }`}
+                            >
+                                {activeFilter === f.key && (
                                     <motion.div
-                                        key={product.id}
-                                        layout
-                                        className={`card-premium p-6 flex flex-col gap-6 bg-card-bg border-2 border-transparent transition-all duration-500 overflow-hidden group ${!product.isAvailable ? 'grayscale opacity-60' : 'shadow-elevated hover:border-primary/20'}`}
-                                    >
-                                        <div className="w-full h-48 rounded-[32px] overflow-hidden bg-surface-50 shadow-inner group-hover:rotate-2 transition-transform duration-700">
-                                            <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                        </div>
-                                        <div className="flex-1 flex flex-col pt-1">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h4 className="font-black text-surface-900 text-2xl tracking-tighter leading-tight">{product.name}</h4>
-                                                <button
-                                                    onClick={() => deleteProduct(product.id)}
-                                                    className="p-2 text-surface-200 hover:text-rose-500 transition-colors"
-                                                >
-                                                    <Trash2 size={20} />
-                                                </button>
-                                            </div>
-                                            <p className="text-3xl font-black text-primary mb-6 leading-none">₹{product.price} <span className="text-[10px] text-muted font-bold uppercase tracking-widest italic opacity-60">/ {product.unit}</span></p>
-
-                                            <div className="mt-auto flex items-center justify-between pt-6 border-t border-border-subtle">
-                                                <button
-                                                    onClick={() => toggleAvailability(product.id)}
-                                                    className={`flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] px-5 py-3 rounded-2xl border-2 transition-all ${product.isAvailable
-                                                        ? 'bg-primary-soft text-primary border-primary/10 shadow-accent/5'
-                                                        : 'bg-surface-100 text-surface-400 border-border-subtle'
-                                                        }`}
-                                                >
-                                                    {product.isAvailable ? (
-                                                        <><CircleCheck size={16} strokeWidth={3} /> Live</>
-                                                    ) : (
-                                                        <><CircleAlert size={16} strokeWidth={3} /> Draft</>
-                                                    )}
-                                                </button>
-                                                <div className="w-12 h-12 bg-surface-50 rounded-2xl flex items-center justify-center text-surface-300 group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
-                                                    <ChevronRight size={24} />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )) : (
-                                    <div className="col-span-full py-32 flex flex-col items-center justify-center text-center space-y-6 bg-card-bg rounded-[32px] border-2 border-dashed border-border-subtle shadow-inner">
-                                        <div className="w-24 h-24 bg-surface-50 rounded-full flex items-center justify-center text-surface-200">
-                                            <LayoutGrid size={48} />
-                                        </div>
-                                        <div className="space-y-2 px-6">
-                                            <p className="text-2xl font-black text-surface-900 tracking-tight">Catalog Empty</p>
-                                            <p className="text-sm font-bold text-muted italic">You haven&apos;t added any products to your micro-market yet. <br className="hidden md:block" /> Start by adding your first high-performance listing.</p>
-                                        </div>
-                                    </div>
+                                        layoutId="activeFilter"
+                                        className="absolute inset-0 bg-background rounded-lg shadow-sm"
+                                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                    />
                                 )}
-                            </div>
-                        </div>
+                                <span className="relative z-10">{f.label}</span>
+                            </button>
+                        ))}
+                    </motion.div>
+
+                    {/* Product List */}
+                    <div className="space-y-3">
+                        <AnimatePresence mode="popLayout">
+                            {filteredProducts.length > 0 ? filteredProducts.map((product, i) => (
+                                <motion.div
+                                    key={product.id}
+                                    layout
+                                    initial={{ opacity: 0, x: -30, scale: 0.95 }}
+                                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                                    exit={{ opacity: 0, x: 30, scale: 0.95 }}
+                                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                    whileHover={{ x: 3 }}
+                                    className={`bg-surface-50 rounded-2xl p-3 flex gap-3 items-center ${!product.isAvailable ? 'opacity-50' : ''}`}
+                                >
+                                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-100 shrink-0">
+                                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-semibold text-sm text-surface-900 truncate">{product.name}</h4>
+                                        <p className="text-primary font-bold text-sm mt-0.5">₹{product.price} <span className="text-xs text-surface-400 font-normal">/ {product.unit}</span></p>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <motion.button
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() => toggleAvailability(product.id)}
+                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${product.isAvailable
+                                                ? 'bg-emerald-500/10 text-emerald-600'
+                                                : 'bg-surface-100 text-surface-400'
+                                                }`}
+                                        >
+                                            {product.isAvailable ? 'Live' : 'Draft'}
+                                        </motion.button>
+                                        <motion.button
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.85 }}
+                                            onClick={() => deleteProduct(product.id)}
+                                            className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                                        >
+                                            <Trash2 size={14} />
+                                        </motion.button>
+                                    </div>
+                                </motion.div>
+                            )) : (
+                                <motion.div
+                                    key="empty"
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.3, type: "spring" }}
+                                    className="py-16 flex flex-col items-center justify-center text-center"
+                                >
+                                    <motion.div
+                                        animate={{ rotate: [0, 5, -5, 0], y: [0, -4, 0] }}
+                                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                        className="w-14 h-14 bg-surface-50 rounded-2xl flex items-center justify-center text-surface-300 mb-4"
+                                    >
+                                        <LayoutGrid size={24} />
+                                    </motion.div>
+                                    <p className="font-semibold text-surface-900 mb-1">No products yet</p>
+                                    <p className="text-sm text-surface-400 max-w-xs">Add your first product to start selling to customers in your area.</p>
+                                    <motion.button
+                                        whileHover={{ scale: 1.03 }}
+                                        whileTap={{ scale: 0.97 }}
+                                        onClick={() => setIsAdding(true)}
+                                        className="mt-4 h-10 px-5 bg-primary text-white rounded-xl flex items-center justify-center gap-2 text-sm font-medium shadow-lg shadow-primary/20"
+                                    >
+                                        <Plus size={16} /> Add First Product
+                                    </motion.button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </main>
 
-            {/* Modal-style "Add Product" Sheet */}
+            {/* Add Product Sheet */}
             <AnimatePresence>
                 {isAdding && (
                     <>
@@ -189,58 +237,63 @@ export default function ProductManagement() {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsAdding(false)}
-                            className="fixed inset-0 bg-surface-900/60 backdrop-blur-sm z-40"
+                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
                         />
                         <motion.div
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
-                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                            className="fixed bottom-0 left-0 w-full bg-card-bg rounded-t-[32px] shadow-2xl z-50"
+                            transition={{ type: "spring", damping: 28, stiffness: 200 }}
+                            className="fixed bottom-0 left-0 w-full bg-background rounded-t-2xl shadow-2xl z-50"
                         >
-                            <div className="max-w-xl mx-auto p-8 pb-12">
-                                <div className="w-12 h-1.5 bg-border-subtle rounded-full mx-auto mb-8" />
-                                <div className="flex justify-between items-center mb-10">
+                            <div className="max-w-lg mx-auto p-5 pb-8">
+                                <div className="w-10 h-1 bg-surface-200 rounded-full mx-auto mb-5" />
+                                <div className="flex justify-between items-center mb-5">
                                     <div>
-                                        <h3 className="text-2xl font-black text-surface-900 tracking-tight leading-tight">New Listing</h3>
-                                        <p className="text-[10px] font-black text-primary uppercase tracking-widest italic">Inventory Management</p>
+                                        <h3 className="font-bold text-lg text-surface-900">New Product</h3>
+                                        <p className="text-xs text-surface-400">Add to your catalog</p>
                                     </div>
-                                    <button onClick={() => setIsAdding(false)} className="w-10 h-10 bg-surface-50 rounded-2xl flex items-center justify-center text-surface-400">
-                                        <X size={20} />
-                                    </button>
+                                    <motion.button whileTap={{ scale: 0.85, rotate: 90 }} onClick={() => setIsAdding(false)} className="w-8 h-8 bg-surface-50 rounded-lg flex items-center justify-center text-surface-400">
+                                        <X size={16} />
+                                    </motion.button>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <div className="aspect-video w-full rounded-3xl bg-surface-50 flex flex-col items-center justify-center border-2 border-dashed border-border-subtle group hover:border-primary transition-all cursor-pointer relative overflow-hidden">
-                                        <div className="absolute inset-x-0 bottom-0 h-1.5 bg-primary/20" />
-                                        <div className="p-5 bg-card-bg rounded-3xl text-surface-400 group-hover:text-primary mb-4 shadow-premium border border-border-subtle transition-transform group-active:scale-95">
-                                            <Camera size={32} />
-                                        </div>
-                                        <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest">Capture Photo</span>
-                                    </div>
+                                <div className="space-y-4">
+                                    {/* Photo Upload */}
+                                    <motion.div
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        className="aspect-[2/1] w-full rounded-xl bg-surface-50 flex flex-col items-center justify-center group hover:bg-surface-100 transition-colors cursor-pointer"
+                                    >
+                                        <motion.div
+                                            animate={{ y: [0, -3, 0] }}
+                                            transition={{ duration: 2, repeat: Infinity }}
+                                            className="w-10 h-10 bg-surface-100 group-hover:bg-surface-200 rounded-lg text-surface-400 flex items-center justify-center mb-2 transition-colors"
+                                        >
+                                            <Camera size={20} />
+                                        </motion.div>
+                                        <span className="text-xs text-surface-400 font-medium">Tap to add photo</span>
+                                    </motion.div>
 
+                                    {/* Input Fields */}
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-surface-900 uppercase tracking-widest ml-1">Product Details</label>
-                                        <div className="relative group">
-                                            <Tag className="absolute left-5 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within:text-primary transition-colors" size={20} />
-                                            <input
-                                                type="text"
-                                                placeholder="Product Name (e.g. Handmade Ceramic Bowl)"
-                                                className="w-full h-16 pl-14 pr-6 rounded-2xl glass shadow-premium border border-border-subtle outline-none font-bold text-surface-900 placeholder:text-surface-400 focus:border-primary/30 transition-all text-sm"
-                                                value={newProduct.name}
-                                                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="flex gap-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Product name"
+                                            className="w-full h-12 px-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
+                                            value={newProduct.name}
+                                            onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                                        />
+                                        <div className="flex gap-3">
                                             <input
                                                 type="number"
                                                 placeholder="Price (₹)"
-                                                className="flex-1 h-16 px-6 rounded-2xl bg-card-bg shadow-premium border border-border-subtle outline-none font-bold text-surface-900 placeholder:text-surface-400 focus:border-primary/30 transition-all text-sm"
+                                                className="flex-1 h-12 px-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
                                                 value={newProduct.price}
                                                 onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
                                             />
                                             <select
-                                                className="w-32 h-16 px-6 rounded-2xl bg-card-bg shadow-premium border border-border-subtle outline-none font-bold text-surface-900 appearance-none text-sm"
+                                                className="w-28 h-12 px-3 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 appearance-none focus:ring-2 focus:ring-primary/20 transition-all"
                                                 value={newProduct.unit}
                                                 onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
                                             >
@@ -248,17 +301,22 @@ export default function ProductManagement() {
                                                 <option>piece</option>
                                                 <option>500g</option>
                                                 <option>dozen</option>
+                                                <option>plate</option>
+                                                <option>litre</option>
                                             </select>
                                         </div>
                                     </div>
 
-                                    <button
+                                    {/* Publish Button */}
+                                    <motion.button
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.97 }}
                                         onClick={addProduct}
-                                        className="w-full btn-primary h-16 text-sm font-black uppercase tracking-[0.2em] shadow-accent flex items-center justify-center gap-3"
+                                        className="w-full bg-primary hover:bg-primary-dark text-white h-12 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
                                     >
-                                        Publish Item
-                                        <ChevronRight size={18} strokeWidth={3} />
-                                    </button>
+                                        Add to Catalog
+                                        <ChevronRight size={16} strokeWidth={2.5} />
+                                    </motion.button>
                                 </div>
                             </div>
                         </motion.div>
@@ -266,14 +324,27 @@ export default function ProductManagement() {
                 )}
             </AnimatePresence>
 
-            <div className="fixed bottom-0 left-0 w-full p-6 md:p-8 bg-background/80 backdrop-blur-2xl border-t border-border-subtle z-40">
-                <div className="max-w-7xl mx-auto px-6 md:px-12">
-                    <Link href="/dashboard" className="btn-primary w-full h-20 md:h-16 shadow-accent text-base md:text-sm tracking-[0.3em] uppercase flex items-center justify-center gap-4">
-                        <span className="font-black">Save & Finish Catalog</span>
-                        <ChevronRight size={24} className="opacity-40" />
-                    </Link>
-                </div>
-            </div>
+            {/* Bottom Save Bar */}
+            <AnimatePresence>
+                {products.length > 0 && (
+                    <motion.div
+                        initial={{ y: 80 }}
+                        animate={{ y: 0 }}
+                        exit={{ y: 80 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        className="fixed bottom-0 left-0 w-full p-4 bg-background/90 backdrop-blur-xl z-30"
+                    >
+                        <div className="max-w-3xl mx-auto">
+                            <motion.div whileTap={{ scale: 0.98 }}>
+                                <Link href="/dashboard" className="flex w-full bg-primary hover:bg-primary-dark text-white h-12 rounded-xl text-sm font-semibold tracking-wide items-center justify-center gap-2 shadow-lg shadow-primary/20">
+                                    Save & Finish
+                                    <ChevronRight size={16} />
+                                </Link>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

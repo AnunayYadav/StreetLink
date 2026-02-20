@@ -23,8 +23,25 @@ const categories = [
     { name: "Delivery", icon: Bike, color: "#E23744", bg: "rgba(226,55,68,0.1)" },
 ];
 
+const pageVariants = {
+    enter: (dir: number) => ({ x: dir > 0 ? 50 : -50, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: number) => ({ x: dir > 0 ? -50 : 50, opacity: 0 })
+};
+
+const staggerGrid = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.04, delayChildren: 0.1 } }
+};
+
+const gridItem = {
+    hidden: { opacity: 0, scale: 0.8, y: 10 },
+    visible: { opacity: 1, scale: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 20 } }
+};
+
 export default function OnboardingPage() {
     const [step, setStep] = useState(1);
+    const [direction, setDirection] = useState(0);
     const [formData, setFormData] = useState<{
         shopName: string;
         category: string;
@@ -37,8 +54,8 @@ export default function OnboardingPage() {
         language: "English"
     });
 
-    const nextStep = () => setStep(s => Math.min(s + 1, 3));
-    const prevStep = () => setStep(s => Math.max(s - 1, 1));
+    const nextStep = () => { setDirection(1); setStep(s => Math.min(s + 1, 3)); };
+    const prevStep = () => { setDirection(-1); setStep(s => Math.max(s - 1, 1)); };
 
     const handleLocation = () => {
         if (navigator.geolocation) {
@@ -51,12 +68,19 @@ export default function OnboardingPage() {
     return (
         <div className="min-h-screen bg-background flex flex-col">
             {/* Header */}
-            <header className="relative z-10 w-full">
+            <motion.header
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="relative z-10 w-full"
+            >
                 <div className="max-w-2xl mx-auto px-5 md:px-8 pt-6 pb-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Link href="/" className="w-10 h-10 bg-surface-50 rounded-xl flex items-center justify-center text-surface-400 hover:text-surface-900 active:scale-95 transition-all">
-                            <ArrowLeft size={18} />
-                        </Link>
+                        <motion.div whileHover={{ x: -2 }} whileTap={{ scale: 0.9 }}>
+                            <Link href="/" className="w-10 h-10 bg-surface-50 rounded-xl flex items-center justify-center text-surface-400 hover:text-surface-900 transition-colors">
+                                <ArrowLeft size={18} />
+                            </Link>
+                        </motion.div>
                         <div>
                             <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Step {step} of 3</p>
                             <h1 className="text-sm font-bold text-surface-900 tracking-tight">Merchant Onboarding</h1>
@@ -64,7 +88,7 @@ export default function OnboardingPage() {
                     </div>
                     <ThemeToggle />
                 </div>
-            </header>
+            </motion.header>
 
             {/* Progress Bar */}
             <div className="w-full">
@@ -74,7 +98,7 @@ export default function OnboardingPage() {
                             <motion.div
                                 initial={false}
                                 animate={{ width: step >= i ? "100%" : "0%" }}
-                                transition={{ duration: 0.4, ease: "easeInOut" }}
+                                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                                 className={`h-full rounded-full ${step >= i ? 'bg-primary' : ''}`}
                             />
                         </div>
@@ -85,24 +109,36 @@ export default function OnboardingPage() {
             {/* Main Content */}
             <main className="flex-1 w-full relative z-10">
                 <div className="max-w-2xl mx-auto px-5 md:px-8 pb-28">
-                    <AnimatePresence mode="wait">
+                    <AnimatePresence mode="wait" custom={direction}>
                         {/* Step 1: Shop Details */}
                         {step === 1 && (
                             <motion.div
                                 key="step1"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -12 }}
-                                transition={{ duration: 0.25 }}
+                                custom={direction}
+                                variants={pageVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                                 className="space-y-8"
                             >
-                                <div className="space-y-1">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                    className="space-y-1"
+                                >
                                     <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">Your Digital Storefront</h2>
                                     <p className="text-sm text-surface-400">Set up the basics for your shop.</p>
-                                </div>
+                                </motion.div>
 
                                 {/* Shop Name Input */}
-                                <div className="space-y-2">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                    className="space-y-2"
+                                >
                                     <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">Shop Name</label>
                                     <div className="relative group">
                                         <Store className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within:text-primary transition-colors" size={18} />
@@ -114,26 +150,39 @@ export default function OnboardingPage() {
                                             onChange={(e) => setFormData({ ...formData, shopName: e.target.value })}
                                         />
                                     </div>
-                                </div>
+                                </motion.div>
 
                                 {/* Category Grid */}
                                 <div className="space-y-3">
-                                    <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">What do you sell?</label>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+                                    <motion.label
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.25 }}
+                                        className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5 block"
+                                    >What do you sell?</motion.label>
+                                    <motion.div
+                                        variants={staggerGrid}
+                                        initial="hidden"
+                                        animate="visible"
+                                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5"
+                                    >
                                         {categories.map(cat => {
                                             const IconComponent = cat.icon;
                                             const isSelected = formData.category === cat.name;
                                             return (
-                                                <button
+                                                <motion.button
                                                     key={cat.name}
+                                                    variants={gridItem}
+                                                    whileHover={{ scale: 1.04, y: -2 }}
+                                                    whileTap={{ scale: 0.95 }}
                                                     onClick={() => setFormData({ ...formData, category: cat.name })}
-                                                    className={`relative p-3.5 rounded-2xl transition-all group flex flex-col items-center gap-2 ${isSelected
-                                                        ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-[1.02]'
-                                                        : 'bg-surface-50 hover:bg-surface-100 active:scale-[0.97]'
+                                                    className={`relative p-3.5 rounded-2xl transition-colors group flex flex-col items-center gap-2 ${isSelected
+                                                        ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                                        : 'bg-surface-50 hover:bg-surface-100'
                                                         }`}
                                                 >
                                                     <div
-                                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isSelected
+                                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isSelected
                                                             ? 'bg-white/20'
                                                             : ''
                                                             }`}
@@ -142,10 +191,10 @@ export default function OnboardingPage() {
                                                         <IconComponent size={20} strokeWidth={2} className={isSelected ? 'text-white' : ''} />
                                                     </div>
                                                     <span className={`text-[10px] font-semibold tracking-wide ${isSelected ? 'text-white' : 'text-surface-500'}`}>{cat.name}</span>
-                                                </button>
+                                                </motion.button>
                                             );
                                         })}
-                                    </div>
+                                    </motion.div>
                                 </div>
                             </motion.div>
                         )}
@@ -154,32 +203,48 @@ export default function OnboardingPage() {
                         {step === 2 && (
                             <motion.div
                                 key="step2"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -12 }}
-                                transition={{ duration: 0.25 }}
+                                custom={direction}
+                                variants={pageVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                                 className="space-y-8"
                             >
-                                <div className="space-y-1">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                    className="space-y-1"
+                                >
                                     <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">Identity & Reach</h2>
                                     <p className="text-sm text-surface-400">Help customers find you on the map.</p>
-                                </div>
+                                </motion.div>
 
                                 <div className="space-y-4">
                                     {/* Location Button */}
-                                    <button
+                                    <motion.button
+                                        initial={{ opacity: 0, y: 15 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.2 }}
+                                        whileHover={{ scale: 1.01 }}
+                                        whileTap={{ scale: 0.98 }}
                                         onClick={handleLocation}
-                                        className={`w-full p-4 rounded-2xl transition-all relative overflow-hidden group ${formData.location
+                                        className={`w-full p-4 rounded-2xl transition-colors relative overflow-hidden group ${formData.location
                                             ? 'bg-primary/10 ring-2 ring-primary/30'
                                             : 'bg-surface-50 hover:bg-surface-100'
                                             }`}
                                     >
                                         <div className="flex items-center gap-4 relative z-10">
-                                            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors ${formData.location ? 'bg-primary text-white' : 'bg-surface-100 text-surface-400'}`}>
+                                            <motion.div
+                                                animate={formData.location ? { scale: [1, 1.1, 1] } : { y: [0, -2, 0] }}
+                                                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors ${formData.location ? 'bg-primary text-white' : 'bg-surface-100 text-surface-400'}`}
+                                            >
                                                 <MapPin size={20} strokeWidth={2} />
-                                            </div>
+                                            </motion.div>
                                             <div className="text-left flex-1">
-                                                <p className={`font-semibold text-sm ${formData.location ? 'text-surface-900' : 'text-surface-900'}`}>
+                                                <p className="font-semibold text-sm text-surface-900">
                                                     {formData.location ? 'Location Verified' : 'Auto-locate Shop'}
                                                 </p>
                                                 <p className={`text-xs mt-0.5 ${formData.location ? 'text-primary font-medium' : 'text-surface-400'}`}>
@@ -187,21 +252,33 @@ export default function OnboardingPage() {
                                                 </p>
                                             </div>
                                             {!formData.location && (
-                                                <ChevronRight size={16} className="text-surface-300" />
+                                                <motion.div animate={{ x: [0, 3, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                                                    <ChevronRight size={16} className="text-surface-300" />
+                                                </motion.div>
                                             )}
                                         </div>
-                                    </button>
+                                    </motion.button>
 
                                     {/* Photo Upload */}
-                                    <div className="relative group overflow-hidden rounded-2xl bg-surface-50 hover:bg-surface-100 aspect-[16/10] flex flex-col items-center justify-center gap-3 transition-all cursor-pointer">
-                                        <div className="w-12 h-12 bg-surface-100 group-hover:bg-surface-200 rounded-xl flex items-center justify-center text-surface-400 group-hover:text-surface-500 group-hover:scale-105 transition-all">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 15 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.3 }}
+                                        whileHover={{ scale: 1.01 }}
+                                        className="relative group overflow-hidden rounded-2xl bg-surface-50 hover:bg-surface-100 aspect-[16/10] flex flex-col items-center justify-center gap-3 transition-colors cursor-pointer"
+                                    >
+                                        <motion.div
+                                            animate={{ y: [0, -4, 0] }}
+                                            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                                            className="w-12 h-12 bg-surface-100 group-hover:bg-surface-200 rounded-xl flex items-center justify-center text-surface-400 group-hover:text-surface-500 transition-colors"
+                                        >
                                             <Camera size={22} />
-                                        </div>
+                                        </motion.div>
                                         <div className="text-center space-y-0.5">
                                             <p className="font-semibold text-sm text-surface-900">Upload Store Photo</p>
                                             <p className="text-xs text-surface-400">Increases trust by up to 80%</p>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 </div>
                             </motion.div>
                         )}
@@ -210,20 +287,32 @@ export default function OnboardingPage() {
                         {step === 3 && (
                             <motion.div
                                 key="step3"
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -12 }}
-                                transition={{ duration: 0.25 }}
+                                custom={direction}
+                                variants={pageVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                                 className="space-y-8"
                             >
-                                <div className="space-y-1">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                    className="space-y-1"
+                                >
                                     <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-tight">Ready to Launch!</h2>
                                     <p className="text-sm text-surface-400">Final polish for your digital business.</p>
-                                </div>
+                                </motion.div>
 
                                 <div className="space-y-4">
                                     {/* Language Selector */}
-                                    <div className="space-y-2">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 15 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.2 }}
+                                        className="space-y-2"
+                                    >
                                         <label className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">Preferred Language</label>
                                         <div className="relative group">
                                             <Languages className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-300 group-focus-within:text-primary transition-colors" size={18} />
@@ -241,21 +330,34 @@ export default function OnboardingPage() {
                                             </select>
                                             <ChevronRight size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-300 rotate-90 pointer-events-none" />
                                         </div>
-                                    </div>
+                                    </motion.div>
 
                                     {/* Ready Card */}
-                                    <div className="p-5 bg-primary/5 rounded-2xl relative overflow-hidden group">
-                                        <div className="absolute right-0 bottom-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.35, type: "spring", stiffness: 200, damping: 20 }}
+                                        className="p-5 bg-primary/5 rounded-2xl relative overflow-hidden group"
+                                    >
+                                        <motion.div
+                                            animate={{ scale: [1, 1.3, 1] }}
+                                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                            className="absolute right-0 bottom-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl"
+                                        />
                                         <div className="flex gap-4 relative z-10">
-                                            <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0">
+                                            <motion.div
+                                                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+                                                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                                className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0"
+                                            >
                                                 <Sparkles size={20} />
-                                            </div>
+                                            </motion.div>
                                             <div className="space-y-0.5">
                                                 <h4 className="font-semibold text-sm text-surface-900">Everything synchronized!</h4>
                                                 <p className="text-sm text-surface-400 leading-relaxed">Your storefront is ready to accept digital payments and orders.</p>
                                             </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 </div>
                             </motion.div>
                         )}
@@ -264,25 +366,42 @@ export default function OnboardingPage() {
             </main>
 
             {/* Bottom Action Bar */}
-            <div className="fixed bottom-0 left-0 w-full p-4 bg-background/90 backdrop-blur-xl z-40">
+            <motion.div
+                initial={{ y: 60 }}
+                animate={{ y: 0 }}
+                transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 25 }}
+                className="fixed bottom-0 left-0 w-full p-4 bg-background/90 backdrop-blur-xl z-40"
+            >
                 <div className="max-w-2xl mx-auto flex gap-3">
-                    {step > 1 && (
-                        <button
-                            onClick={prevStep}
-                            className="w-12 h-12 bg-surface-50 rounded-xl flex items-center justify-center text-surface-500 hover:text-surface-900 active:scale-95 transition-all shrink-0"
-                        >
-                            <ArrowLeft size={18} />
-                        </button>
-                    )}
-                    <button
+                    <AnimatePresence>
+                        {step > 1 && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.8, width: 0 }}
+                                animate={{ opacity: 1, scale: 1, width: "auto" }}
+                                exit={{ opacity: 0, scale: 0.8, width: 0 }}
+                                onClick={prevStep}
+                                className="w-12 h-12 bg-surface-50 rounded-xl flex items-center justify-center text-surface-500 hover:text-surface-900 shrink-0 transition-colors"
+                            >
+                                <ArrowLeft size={18} />
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
+                    <motion.button
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={step === 3 ? () => window.location.href = '/dashboard' : nextStep}
-                        className="flex-1 bg-primary hover:bg-primary-dark text-white h-12 rounded-xl text-sm font-semibold tracking-wide flex items-center justify-center gap-2 group active:scale-[0.98] transition-all shadow-lg shadow-primary/20"
+                        className="flex-1 bg-primary hover:bg-primary-dark text-white h-12 rounded-xl text-sm font-semibold tracking-wide flex items-center justify-center gap-2 group transition-colors shadow-lg shadow-primary/20"
                     >
                         <span>{step === 3 ? 'Launch My Store' : 'Next Step'}</span>
-                        <ChevronRight size={16} strokeWidth={2.5} className="group-hover:translate-x-0.5 transition-transform" />
-                    </button>
+                        <motion.div
+                            animate={{ x: [0, 3, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                            <ChevronRight size={16} strokeWidth={2.5} />
+                        </motion.div>
+                    </motion.button>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 }

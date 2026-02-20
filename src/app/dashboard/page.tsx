@@ -9,149 +9,199 @@ import {
     Clock,
     Package,
     ArrowRight,
-    LayoutGrid
+    Zap
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import ThemeToggle from "@/components/ThemeToggle";
 
+const fadeUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+        opacity: 1,
+        y: 0,
+        transition: { delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }
+    })
+};
+
+const scaleIn = {
+    hidden: { opacity: 0, scale: 0.92 },
+    visible: (i: number) => ({
+        opacity: 1,
+        scale: 1,
+        transition: { delay: i * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] as const }
+    })
+};
+
 export default function VendorDashboard() {
     return (
-        <div className="min-h-screen bg-surface-50">
-            <header className="sticky top-0 bg-surface-50/80 backdrop-blur-md z-30 border-b border-border-subtle">
-                <div className="max-w-7xl mx-auto px-6 md:px-12 pt-10 pb-6 flex items-center justify-between w-full">
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-3xl overflow-hidden glass shadow-premium border-2 border-white dark:border-white/10 rotate-3 transform transition-transform hover:rotate-0">
+        <div className="min-h-screen bg-background">
+            <motion.header
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="sticky top-0 bg-background/90 backdrop-blur-xl z-30"
+            >
+                <div className="max-w-4xl mx-auto px-5 md:px-8 pt-6 pb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <motion.div
+                            initial={{ scale: 0, rotate: -20 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 18 }}
+                            className="w-10 h-10 rounded-xl overflow-hidden"
+                        >
                             <img
                                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150"
                                 alt="Profile"
                                 className="w-full h-full object-cover"
                             />
-                        </div>
+                        </motion.div>
                         <div>
-                            <h1 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-0.5">Verified Partner</h1>
-                            <p className="text-xl font-black text-surface-900 tracking-tight flex items-center gap-2">
-                                Merchant Portal
-                            </p>
+                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Verified Partner</p>
+                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">Merchant Portal</h1>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <ThemeToggle />
-                        <button className="w-12 h-12 glass rounded-2xl flex items-center justify-center shadow-premium border border-border-subtle active:scale-90 transition-all">
-                            <Share2 size={20} className="text-surface-900" />
-                        </button>
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.9 }}
+                            className="w-10 h-10 bg-surface-50 rounded-xl flex items-center justify-center transition-colors"
+                        >
+                            <Share2 size={16} className="text-surface-500" />
+                        </motion.button>
                     </div>
                 </div>
-            </header>
+            </motion.header>
 
             <main className="w-full">
-                <div className="max-w-7xl mx-auto px-6 md:px-12 pb-24 space-y-12 py-12">
-                    <div className="grid lg:grid-cols-12 gap-10">
-                        {/* Left Column: Stats & Actions */}
-                        <div className="lg:col-span-7 space-y-10">
-                            {/* Wallet Section */}
-                            <section className="space-y-4">
-                                <div className="flex items-center justify-between px-1">
-                                    <h2 className="text-sm font-black text-surface-900 uppercase tracking-widest">Earnings Stats</h2>
-                                    <div className="px-3 py-1.5 bg-card-bg rounded-xl border border-border-subtle text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                        Monthly <ChevronRight size={12} />
-                                    </div>
-                                </div>
+                <div className="max-w-4xl mx-auto px-5 md:px-8 pb-24 space-y-6 pt-4">
 
-                                <div className="card-elevated bg-primary p-8 text-contrast-text relative overflow-hidden group shadow-accent">
-                                    <div className="absolute -right-10 -top-10 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700" />
-                                    <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
-                                        <div className="space-y-2">
-                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-80">Total Available Balance</p>
-                                            <h3 className="text-5xl font-black tracking-tighter flex items-baseline gap-2">
-                                                ₹ 0
-                                                <span className="text-sm font-bold opacity-60">.00</span>
-                                            </h3>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-5 bg-white/15 rounded-3xl backdrop-blur-sm border border-white/10 group-hover:bg-white/20 transition-colors">
-                                                <p className="text-[8px] font-black uppercase tracking-widest opacity-70 mb-2">Success Rate</p>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-black text-xl tracking-tight">0%</span>
-                                                    <TrendingUp size={16} />
-                                                </div>
-                                            </div>
-                                            <div className="p-5 bg-white/15 rounded-3xl backdrop-blur-sm border border-white/10 group-hover:bg-white/20 transition-colors">
-                                                <p className="text-[8px] font-black uppercase tracking-widest opacity-70 mb-2">Deliveries</p>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-black text-xl tracking-tight">0</span>
-                                                    <Package size={16} />
-                                                </div>
-                                            </div>
-                                        </div>
+                    {/* Earnings Card */}
+                    <motion.section
+                        custom={0}
+                        variants={scaleIn}
+                        initial="hidden"
+                        animate="visible"
+                        className="bg-primary rounded-2xl p-5 text-white relative overflow-hidden"
+                    >
+                        <motion.div
+                            animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-3xl"
+                        />
+                        <div className="relative z-10">
+                            <p className="text-[10px] font-medium uppercase tracking-wider opacity-70 mb-1">Total Balance</p>
+                            <div className="flex items-baseline gap-1 mb-4">
+                                <motion.span
+                                    initial={{ opacity: 0, scale: 0.5 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                                    className="text-3xl font-bold tracking-tight"
+                                >₹0</motion.span>
+                                <span className="text-xs opacity-50">.00</span>
+                            </div>
+                            <div className="flex gap-3">
+                                <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible" className="flex-1 bg-white/10 rounded-xl p-3">
+                                    <p className="text-[9px] uppercase tracking-wider opacity-60 mb-1">Success Rate</p>
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-semibold text-sm">0%</span>
+                                        <TrendingUp size={14} className="opacity-60" />
                                     </div>
-                                </div>
-                            </section>
+                                </motion.div>
+                                <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible" className="flex-1 bg-white/10 rounded-xl p-3">
+                                    <p className="text-[9px] uppercase tracking-wider opacity-60 mb-1">Deliveries</p>
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-semibold text-sm">0</span>
+                                        <Package size={14} className="opacity-60" />
+                                    </div>
+                                </motion.div>
+                            </div>
+                        </div>
+                    </motion.section>
 
-                            {/* Quick Actions Grid */}
-                            <section className="grid sm:grid-cols-2 gap-6">
-                                <Link href="/products" className="glass-card p-6 flex flex-col gap-5 border border-border-subtle hover:border-primary/20 transition-all group shadow-elevated rounded-[32px]">
-                                    <div className="w-16 h-16 rounded-3xl bg-primary-soft text-primary flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner border border-primary/10">
-                                        <Plus size={32} strokeWidth={3} />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-black text-surface-900 uppercase tracking-widest text-[10px] mb-1 opacity-60">Manage Inventory</h4>
-                                        <p className="text-2xl font-black tracking-tight">Add Product</p>
-                                    </div>
+                    {/* Quick Actions */}
+                    <motion.section custom={2} variants={fadeUp} initial="hidden" animate="visible" className="space-y-2">
+                        <h2 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">Quick Actions</h2>
+                        <div className="grid grid-cols-2 gap-3">
+                            <motion.div whileHover={{ y: -2, scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+                                <Link href="/products" className="block bg-surface-50 hover:bg-surface-100 p-4 rounded-2xl transition-colors group">
+                                    <motion.div
+                                        whileHover={{ rotate: 90 }}
+                                        transition={{ type: "spring", stiffness: 300 }}
+                                        className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-3"
+                                    >
+                                        <Plus size={20} strokeWidth={2.5} />
+                                    </motion.div>
+                                    <p className="font-semibold text-sm text-surface-900">Add Product</p>
+                                    <p className="text-[10px] text-surface-400 mt-0.5">Manage inventory</p>
                                 </Link>
-                                <div className="glass-card p-6 flex flex-col gap-5 border border-border-subtle hover:border-primary/20 transition-all group cursor-pointer shadow-elevated rounded-[32px]">
-                                    <div className="w-16 h-16 rounded-3xl bg-secondary-soft text-secondary dark:bg-surface-100 dark:text-surface-900 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner border border-border-subtle">
-                                        <QrCode size={32} strokeWidth={3} />
+                            </motion.div>
+                            <motion.div whileHover={{ y: -2, scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+                                <div className="bg-surface-50 hover:bg-surface-100 p-4 rounded-2xl transition-colors group cursor-pointer">
+                                    <div className="w-10 h-10 rounded-xl bg-surface-200 text-surface-500 dark:bg-surface-100 dark:text-surface-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                                        <QrCode size={20} strokeWidth={2} />
                                     </div>
-                                    <div>
-                                        <h4 className="font-black text-surface-900 uppercase tracking-widest text-[10px] mb-1 opacity-60">Digital Entrance</h4>
-                                        <p className="text-2xl font-black tracking-tight">Store QR Code</p>
-                                    </div>
+                                    <p className="font-semibold text-sm text-surface-900">Store QR Code</p>
+                                    <p className="text-[10px] text-surface-400 mt-0.5">Share your shop</p>
                                 </div>
-                            </section>
+                            </motion.div>
                         </div>
+                    </motion.section>
 
-                        {/* Right Column: Active Orders & Promo */}
-                        <div className="lg:col-span-5 space-y-10">
-                            <section className="space-y-6">
-                                <div className="flex items-center justify-between px-1">
-                                    <h2 className="text-sm font-black text-surface-900 uppercase tracking-widest">Active Orders</h2>
-                                    <Link href="/orders" className="text-[10px] font-black uppercase tracking-widest text-primary hover:translate-x-1 transition-transform flex items-center gap-1">
-                                        History <ArrowRight size={12} />
-                                    </Link>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div className="py-20 flex flex-col items-center justify-center text-center space-y-6 bg-card-bg rounded-[32px] border-2 border-dashed border-border-subtle shadow-inner">
-                                        <div className="w-20 h-20 bg-surface-50 rounded-full flex items-center justify-center text-surface-200">
-                                            <Clock size={40} />
-                                        </div>
-                                        <div className="space-y-1 px-6">
-                                            <p className="text-xl font-black text-surface-900 tracking-tight">Queue Clear</p>
-                                            <p className="text-[10px] font-bold text-muted italic uppercase tracking-widest leading-relaxed">No orders in flight</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
-
-                            {/* Promotion Banner */}
-                            <section className="card-premium p-6 bg-contrast-bg text-contrast-text relative overflow-hidden group shadow-2xl">
-                                <div className="absolute right-0 bottom-0 w-48 h-48 bg-primary/20 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-1000" />
-                                <div className="relative z-10 flex flex-col gap-6">
-                                    <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/5 rotate-6 transform group-hover:rotate-0 transition-transform">
-                                        <LayoutGrid size={32} className="text-primary" />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Intelligent AI Hub</h4>
-                                        <p className="text-2xl font-black tracking-tight leading-tight">Generate magic descriptions for your menu</p>
-                                        <button className="text-sm font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2 group pt-2">
-                                            Unlock Now <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </section>
+                    {/* Active Orders */}
+                    <motion.section custom={3} variants={fadeUp} initial="hidden" animate="visible" className="space-y-2">
+                        <div className="flex items-center justify-between ml-0.5">
+                            <h2 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider">Active Orders</h2>
+                            <Link href="/orders" className="text-xs font-medium text-primary flex items-center gap-1 hover:gap-2 transition-all">
+                                View all <ArrowRight size={12} />
+                            </Link>
                         </div>
-                    </div>
+                        <div className="bg-surface-50 rounded-2xl py-12 flex flex-col items-center justify-center text-center">
+                            <motion.div
+                                animate={{ rotate: [0, 10, -10, 0] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                className="w-12 h-12 bg-surface-100 rounded-xl flex items-center justify-center text-surface-300 mb-3"
+                            >
+                                <Clock size={22} />
+                            </motion.div>
+                            <p className="font-semibold text-sm text-surface-900">No active orders</p>
+                            <p className="text-xs text-surface-400 mt-0.5">Orders will appear here in real-time</p>
+                        </div>
+                    </motion.section>
+
+                    {/* AI Feature Card */}
+                    <motion.section
+                        custom={4}
+                        variants={fadeUp}
+                        initial="hidden"
+                        animate="visible"
+                        whileHover={{ y: -3 }}
+                        className="bg-contrast-bg text-contrast-text rounded-2xl p-5 relative overflow-hidden group cursor-pointer"
+                    >
+                        <motion.div
+                            animate={{ scale: [1, 1.4, 1], x: [0, 10, 0] }}
+                            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute right-0 bottom-0 w-32 h-32 bg-primary/15 rounded-full blur-2xl"
+                        />
+                        <div className="relative z-10 flex items-start gap-4">
+                            <motion.div
+                                animate={{ rotate: [0, 5, -5, 0] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shrink-0"
+                            >
+                                <Zap size={20} className="text-primary" />
+                            </motion.div>
+                            <div className="flex-1 space-y-1">
+                                <p className="text-[10px] font-medium uppercase tracking-wider opacity-50">AI Hub</p>
+                                <p className="font-semibold text-sm leading-snug">Generate magic descriptions for your menu</p>
+                                <button className="text-xs font-medium text-primary flex items-center gap-1 mt-2 hover:gap-2 transition-all">
+                                    Unlock Now <ArrowRight size={12} />
+                                </button>
+                            </div>
+                        </div>
+                    </motion.section>
+
                 </div>
             </main>
         </div>
