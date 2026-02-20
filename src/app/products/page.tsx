@@ -30,9 +30,9 @@ const fadeUp = {
 };
 
 export default function ProductManagement() {
-    const { user, merchantProfile, isMerchant } = useAuth();
+    const { user, merchantProfile, isMerchant, isLoading: isAuthLoading } = useAuth();
     const [products, setProducts] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isPageLoading, setIsPageLoading] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [activeFilter, setActiveFilter] = useState("all");
@@ -41,8 +41,11 @@ export default function ProductManagement() {
     const supabase = createClient();
 
     const fetchProducts = useCallback(async () => {
-        if (!merchantProfile) return;
-        setIsLoading(true);
+        if (!merchantProfile) {
+            setIsPageLoading(false);
+            return;
+        }
+        setIsPageLoading(true);
         const { data, error } = await supabase
             .from('products')
             .select('*')
@@ -52,43 +55,62 @@ export default function ProductManagement() {
         if (!error && data) {
             setProducts(data);
         }
-        setIsLoading(false);
+        setIsPageLoading(false);
     }, [merchantProfile, supabase]);
 
     useEffect(() => {
-        if (!isMerchant && !isLoading) {
+        if (isAuthLoading) return;
+
+        if (!isMerchant) {
             router.replace('/onboarding');
             return;
         }
         fetchProducts();
-    }, [isMerchant, isLoading, fetchProducts, router]);
+    }, [isMerchant, isAuthLoading, fetchProducts, router]);
 
     const addProduct = async () => {
-        if (!newProduct.name || !newProduct.price || !merchantProfile) return;
-        setIsSaving(true);
-
-        const { data, error } = await supabase
-            .from('products')
-            .insert({
-                shop_id: merchantProfile.id,
-                name: newProduct.name,
-                description: newProduct.description,
-                price: Number(newProduct.price),
-                category: newProduct.unit, // Reusing unit for category for now or stick to it
-                image_url: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&q=80&w=200",
-                is_available: true
-            })
-            .select()
-            .single();
-
-        if (!error && data) {
-            setProducts([data, ...products]);
-            setIsAdding(false);
-            setNewProduct({ name: "", price: "", unit: "kg", description: "" });
-        } else {
-            alert(error?.message || "Failed to add product");
+        if (!merchantProfile) {
+            alert("Merchant profile not found. Please try refreshing.");
+            return;
         }
-        setIsSaving(false);
+        if (!newProduct.name.trim()) {
+            alert("Please enter a product name");
+            return;
+        }
+        if (!newProduct.price || isNaN(Number(newProduct.price))) {
+            alert("Please enter a valid price");
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const { data, error } = await supabase
+                .from('products')
+                .insert({
+                    shop_id: merchantProfile.id,
+                    name: newProduct.name.trim(),
+                    description: newProduct.description.trim(),
+                    price: Number(newProduct.price),
+                    category: newProduct.unit,
+                    image_url: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&q=80&w=200",
+                    is_available: true
+                })
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            if (data) {
+                setProducts([data, ...products]);
+                setIsAdding(false);
+                setNewProduct({ name: "", price: "", unit: "kg", description: "" });
+            }
+        } catch (error: any) {
+            console.error("Error adding product:", error);
+            alert(error.message || "Failed to add product");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const deleteProduct = async (id: string) => {
@@ -125,7 +147,7 @@ export default function ProductManagement() {
         return true;
     });
 
-    if (isLoading) {
+    if (isAuthLoading || (isPageLoading && products.length === 0)) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
