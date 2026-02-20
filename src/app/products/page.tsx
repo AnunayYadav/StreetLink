@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
     ArrowLeft,
     Plus,
@@ -37,8 +37,41 @@ export default function ProductManagement() {
     const [isSaving, setIsSaving] = useState(false);
     const [activeFilter, setActiveFilter] = useState("all");
     const [newProduct, setNewProduct] = useState({ name: "", price: "", unit: "kg", description: "" });
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const supabase = createClient();
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const uploadImage = async (file: File) => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${merchantProfile?.id}/${fileName}`;
+
+        const { error: uploadError, data } = await supabase.storage
+            .from('product-images')
+            .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('product-images')
+            .getPublicUrl(filePath);
+
+        return publicUrl;
+    };
 
     const fetchProducts = useCallback(async () => {
         if (!merchantProfile) {
@@ -84,6 +117,16 @@ export default function ProductManagement() {
 
         setIsSaving(true);
         try {
+            let imageUrl = "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&q=80&w=200";
+
+            if (selectedFile) {
+                try {
+                    imageUrl = await uploadImage(selectedFile);
+                } catch (err) {
+                    console.error("Image upload failed, using placeholder", err);
+                }
+            }
+
             const { data, error } = await supabase
                 .from('products')
                 .insert({
@@ -92,7 +135,7 @@ export default function ProductManagement() {
                     description: newProduct.description.trim(),
                     price: Number(newProduct.price),
                     category: newProduct.unit,
-                    image_url: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&q=80&w=200",
+                    image_url: imageUrl,
                     is_available: true
                 })
                 .select()
@@ -104,6 +147,8 @@ export default function ProductManagement() {
                 setProducts([data, ...products]);
                 setIsAdding(false);
                 setNewProduct({ name: "", price: "", unit: "kg", description: "" });
+                setSelectedFile(null);
+                setImagePreview(null);
             }
         } catch (error: any) {
             console.error("Error adding product:", error);
@@ -347,19 +392,38 @@ export default function ProductManagement() {
 
                                 <div className="space-y-4">
                                     {/* Photo Upload */}
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={handleFileSelect}
+                                    />
                                     <motion.div
                                         whileHover={{ scale: 1.01 }}
                                         whileTap={{ scale: 0.99 }}
-                                        className="aspect-[2/1] w-full rounded-xl bg-surface-50 flex flex-col items-center justify-center group hover:bg-surface-100 transition-colors cursor-pointer"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="aspect-[2/1] w-full rounded-xl bg-surface-50 flex flex-col items-center justify-center group hover:bg-surface-100 transition-colors cursor-pointer relative overflow-hidden"
                                     >
-                                        <motion.div
-                                            animate={{ y: [0, -3, 0] }}
-                                            transition={{ duration: 2, repeat: Infinity }}
-                                            className="w-10 h-10 bg-surface-100 group-hover:bg-surface-200 rounded-lg text-surface-400 flex items-center justify-center mb-2 transition-colors"
-                                        >
-                                            <Camera size={20} />
-                                        </motion.div>
-                                        <span className="text-xs text-surface-400 font-medium">Tap to add photo</span>
+                                        {imagePreview ? (
+                                            <>
+                                                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Camera size={24} className="text-white" />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <motion.div
+                                                    animate={{ y: [0, -3, 0] }}
+                                                    transition={{ duration: 2, repeat: Infinity }}
+                                                    className="w-10 h-10 bg-surface-100 group-hover:bg-surface-200 rounded-lg text-surface-400 flex items-center justify-center mb-2 transition-colors"
+                                                >
+                                                    <Camera size={20} />
+                                                </motion.div>
+                                                <span className="text-xs text-surface-400 font-medium">Tap to add photo</span>
+                                            </>
+                                        )}
                                     </motion.div>
 
                                     {/* Input Fields */}
