@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import Navbar from "@/components/Navbar";
 import { useLanguage } from "@/lib/context/language-context";
 import { createClient } from "@/lib/supabase/client";
 
@@ -56,7 +57,7 @@ export default function CustomerDiscovery() {
         { key: "Repair", label: t("cat.repair"), icon: Wrench, color: "#64748B" },
         { key: "Pharmacy", label: t("cat.pharmacy"), icon: Pill, color: "#14B8A6" },
         { key: "Cafe & Tea", label: t("cat.cafe"), icon: Coffee, color: "#D97706" },
-        { key: "Others", label: t("onboarding.others"), icon: Sparkles, color: "#E23744" },
+        { key: "Others", label: t("cat.others"), icon: Sparkles, color: "#E23744" },
     ];
 
     const trendingSearches = [
@@ -85,56 +86,45 @@ export default function CustomerDiscovery() {
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Header */}
-            <motion.header
-                initial={{ opacity: 0, y: -15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="sticky top-0 bg-background/90 backdrop-blur-xl z-30"
-            >
-                <div className="max-w-3xl mx-auto px-5 md:px-8 pt-6 pb-4">
-                    <motion.div
-                        initial={{ opacity: 0, x: -15 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1, duration: 0.4 }}
-                        className="flex items-center gap-3 mb-4"
-                    >
-                        <motion.div whileHover={{ x: -2 }} whileTap={{ scale: 0.9 }}>
-                            <Link href="/" className="w-10 h-10 bg-surface-50 rounded-xl flex items-center justify-center text-surface-400 hover:text-surface-900 transition-colors">
-                                <ArrowLeft size={18} />
-                            </Link>
-                        </motion.div>
-                        <motion.div
-                            animate={{ y: [0, -2, 0] }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                            className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center"
-                        >
-                            <Compass size={18} />
-                        </motion.div>
-                        <div>
-                            <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">{t("explorer.title")}</p>
-                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">{t("explorer.subtitle") || "Nearby Shops"}</h1>
-                        </div>
-                    </motion.div>
+            <Navbar />
 
-                    {/* Search Bar */}
+            <div className="max-w-3xl mx-auto px-5 md:px-8 pt-6 pb-4">
+                <motion.div
+                    initial={{ opacity: 0, x: -15 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1, duration: 0.4 }}
+                    className="flex items-center gap-3 mb-6"
+                >
                     <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.4 }}
-                        className="relative"
+                        animate={{ y: [0, -2, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center"
                     >
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-300" size={16} />
-                        <input
-                            type="text"
-                            placeholder={t("explorer.placeholder")}
-                            className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                        <Compass size={18} />
                     </motion.div>
-                </div>
-            </motion.header>
+                    <div>
+                        <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">{t("explorer.title")}</p>
+                        <h1 className="text-sm font-bold text-surface-900 tracking-tight">{t("explorer.subtitle") || "Nearby Shops"}</h1>
+                    </div>
+                </motion.div>
+
+                {/* Search Bar */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.4 }}
+                    className="relative"
+                >
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-300" size={16} />
+                    <input
+                        type="text"
+                        placeholder={t("explorer.placeholder")}
+                        className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </motion.div>
+            </div>
 
             <main className="w-full pb-24">
                 <div className="max-w-3xl mx-auto px-5 md:px-8 space-y-6 pt-2">

@@ -1,21 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, Store, ShoppingBag, ShieldCheck, ChevronRight, Zap, Users, Globe, Menu, X, LogIn, Loader2 } from "lucide-react";
+import { ArrowRight, ShoppingBag, ShieldCheck, ChevronRight, Zap, Users, Globe, Store, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import ThemeToggle from "@/components/ThemeToggle";
+import Navbar from "@/components/Navbar";
 import { useAuth } from "@/lib/context/auth-context";
 import { useLanguage } from "@/lib/context/language-context";
-
-const navLinks = [
-  { href: "/search", label: "Markets" },
-  { href: "/onboarding", label: "Register" },
-  { href: "/support", label: "Support" },
-  { href: "/settings", label: "Settings" },
-];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -27,7 +19,6 @@ const fadeUp = {
 };
 
 export default function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isMerchant, isLoggedIn, isLoading, role } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
@@ -50,16 +41,10 @@ export default function LandingPage() {
     );
   }
 
-  // Nav links are now dynamic inside the component
-  const navLinks = [
-    { href: "/search", label: t("nav.explorer") },
-    { href: "/onboarding", label: t("onboarding.register") || "Register" },
-    { href: "/support", label: t("nav.support") || "Support" },
-    { href: "/settings", label: t("nav.settings") },
-  ];
-
   return (
     <div className="min-h-screen bg-surface-50 flex flex-col overflow-x-hidden">
+      <Navbar />
+
       {/* Dynamic Background Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <motion.div
@@ -78,147 +63,6 @@ export default function LandingPage() {
           className="absolute bottom-[0%] left-[20%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[100px]"
         />
       </div>
-
-      <motion.header
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative z-20 w-full bg-background/50 backdrop-blur-md"
-      >
-        <div className="max-w-7xl mx-auto px-5 md:px-12 py-4 md:py-6 flex items-center justify-between">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15, duration: 0.5 }}
-            className="flex items-center gap-3"
-          >
-            <motion.div
-              initial={{ scale: 0, rotate: -45 }}
-              animate={{ scale: 1, rotate: 3 }}
-              transition={{ delay: 0.25, type: "spring", stiffness: 300, damping: 15 }}
-              className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-accent"
-            >
-              <Store size={22} strokeWidth={3} className="md:w-7 md:h-7" />
-            </motion.div>
-            <span className="text-xl md:text-2xl font-black text-surface-900 tracking-tighter">Localynk</span>
-          </motion.div>
-          <div className="flex items-center gap-3">
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-6 text-xs font-semibold uppercase tracking-wider text-surface-500">
-              {navLinks.map((link, i) => (
-                <motion.div
-                  key={link.href}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + i * 0.08 }}
-                >
-                  <Link href={link.href} className="hover:text-primary transition-colors">{link.label}</Link>
-                </motion.div>
-              ))}
-            </nav>
-            <ThemeToggle />
-            {/* Mobile Menu Button */}
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden w-10 h-10 bg-surface-50 rounded-xl flex items-center justify-center text-surface-500 transition-colors"
-            >
-              <AnimatePresence mode="wait">
-                {mobileMenuOpen ? (
-                  <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                    <X size={18} />
-                  </motion.div>
-                ) : (
-                  <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                    <Menu size={18} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
-          </div>
-        </div>
-
-        {/* Mobile Menu Dropdown */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="md:hidden overflow-hidden bg-background/95 backdrop-blur-xl"
-            >
-              <nav className="px-5 pb-4 space-y-1">
-                {navLinks.map((link, i) => (
-                  <motion.div
-                    key={link.href}
-                    initial={{ opacity: 0, x: -15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05, duration: 0.3 }}
-                  >
-                    <Link
-                      href={link.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-between p-3 rounded-xl hover:bg-surface-50 transition-all text-sm font-medium text-surface-900"
-                    >
-                      {link.label}
-                      <ChevronRight size={14} className="text-surface-300" />
-                    </Link>
-                  </motion.div>
-                ))}
-                <div className="pt-2 border-t border-surface-100 mt-2">
-                  {isMerchant ? (
-                    <motion.div
-                      initial={{ opacity: 0, x: -15 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.25, duration: 0.3 }}
-                    >
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-all text-sm font-bold text-primary"
-                      >
-                        {t("nav.dashboard_btn")}
-                        <ArrowRight size={14} />
-                      </Link>
-                    </motion.div>
-                  ) : isLoggedIn ? (
-                    <motion.div
-                      initial={{ opacity: 0, x: -15 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.25, duration: 0.3 }}
-                    >
-                      <Link
-                        href="/onboarding"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-all text-sm font-bold text-primary"
-                      >
-                        {t("nav.register_btn")}
-                        <ArrowRight size={14} />
-                      </Link>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ opacity: 0, x: -15 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.25, duration: 0.3 }}
-                    >
-                      <Link
-                        href="/login"
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center justify-between p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-all text-sm font-bold text-primary"
-                      >
-                        {t("nav.login_btn")}
-                        <LogIn size={14} />
-                      </Link>
-                    </motion.div>
-                  )}
-                </div>
-              </nav>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.header>
 
       {/* Hero Section */}
       <main className="flex-1 relative z-10">
