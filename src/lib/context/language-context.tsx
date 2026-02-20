@@ -143,6 +143,15 @@ const translations: Record<LanguageCode, Record<string, string>> = {
         "support.res.privacy": "Privacy Policy",
         "support.res.privacy_desc": "How we protect your data",
 
+        // ChatBot
+        "chat.greeting": "Hello! I am your StreetLink AI assistant. How can I help you today?",
+        "chat.placeholder": "Ask something about StreetLink...",
+        "chat.title": "StreetLink AI",
+        "chat.online": "Online & Ready",
+        "chat.error_connect": "I'm sorry, I'm having trouble connecting right now. Please try again later.",
+        "chat.error_generic": "Something went wrong. Please check your connection.",
+        "chat.powered_by": "Powered by Gemini AI",
+
         // Onboarding
         "onboarding.step_of": "Step {0} of 3",
         "onboarding.merchant_title": "Merchant Onboarding",
@@ -317,6 +326,15 @@ const translations: Record<LanguageCode, Record<string, string>> = {
         "support.res.privacy": "गोपनीयता नीति",
         "support.res.privacy_desc": "हम आपके डेटा की सुरक्षा कैसे करते हैं",
 
+        // ChatBot
+        "chat.greeting": "नमस्ते! मैं आपका स्ट्रीटलिंक एआई सहायक हूं। आज मैं आपकी क्या मदद कर सकता हूं?",
+        "chat.placeholder": "स्ट्रीटलिंक के बारे में कुछ पूछें...",
+        "chat.title": "स्ट्रीटलिंक एआई",
+        "chat.online": "ऑनलाइन और तैयार",
+        "chat.error_connect": "क्षमा करें, मुझे अभी जुड़ने में परेशानी हो रही है। कृपया बाद में पुनः प्रयास करें।",
+        "chat.error_generic": "कुछ गलत हो गया। कृपया अपना कनेक्शन जांचें।",
+        "chat.powered_by": "जेमिनी एआई द्वारा संचालित",
+
         "onboarding.step_of": "चरण {0} का 3",
         "onboarding.merchant_title": "मर्चेंट ऑनबोर्डिंग",
         "onboarding.register": "रजिस्टर",
@@ -488,6 +506,15 @@ const translations: Record<LanguageCode, Record<string, string>> = {
         "support.res.privacy": "தனியுரிமைக் கொள்கை",
         "support.res.privacy_desc": "உங்கள் தரவை நாங்கள் எவ்வாறு பாதுகாக்கிறோம்",
 
+        // ChatBot
+        "chat.greeting": "வணக்கம்! நான் உங்கள் ஸ்ட்ரீட்லிங்க் AI உதவியாளர். இன்று உங்களுக்கு நான் எப்படி உதவ முடியும்?",
+        "chat.placeholder": "ஸ்ட்ரீட்லிங்க் பற்றி ஏதாவது கேளுங்கள்...",
+        "chat.title": "ஸ்ட்ரீட்லிங்க் AI",
+        "chat.online": "ஆன்லைனில் தயாராக உள்ளது",
+        "chat.error_connect": "மன்னிக்கவும், இப்போது இணைப்பதில் எனக்கு சிக்கல் உள்ளது. பிறகு மீண்டும் முயற்சிக்கவும்.",
+        "chat.error_generic": "ஏதோ தவறு நடந்துவிட்டது. உங்கள் இணைப்பைச் சரிபார்க்கவும்.",
+        "chat.powered_by": "ஜெமினி AI மூலம் இயக்கப்படுகிறது",
+
         "onboarding.step_of": "படி {0} இல் 3",
         "onboarding.merchant_title": "வணிகர் பதிவு",
         "onboarding.register": "பதிவு",
@@ -658,6 +685,15 @@ const translations: Record<LanguageCode, Record<string, string>> = {
         "support.res.tos_desc": "మా నిబంధనలను చదవండి",
         "support.res.privacy": "గోప్యతా విధానం",
         "support.res.privacy_desc": "మేము మీ డేటాను ఎలా రక్షిస్తాము",
+
+        // ChatBot
+        "chat.greeting": "నమస్కారం! నేను మీ స్ట్రీట్లింక్ AI అసిస్టెంట్‌ని. ఈరోజు నేను మీకు ఎలా సహాయం చేయగలను?",
+        "chat.placeholder": "స్ట్రీట్లింక్ గురించి ఏదైనా అడగండి...",
+        "chat.title": "స్ట్రీట్లింక్ AI",
+        "chat.online": "ఆన్‌లైన్ & సిద్ధంగా ఉంది",
+        "chat.error_connect": "నన్ను క్షమించండి, ప్రస్తుతం కనెక్ట్ చేయడంలో నాకు ఇబ్బంది ఉంది. దయచేసి తర్వాత మళ్ళీ ప్రయత్నించండి.",
+        "chat.error_generic": "ఏదో తప్పు జరిగింది. దయచేసి మీ కనెక్షన్‌ని తనిఖీ చేయండి.",
+        "chat.powered_by": "జెమిని AI ద్వారా ఆధారితం",
 
         "onboarding.step_of": "దశ {0} లో 3",
         "onboarding.merchant_title": "మర్చంట్ ఆన్‌బోర్డింగ్",

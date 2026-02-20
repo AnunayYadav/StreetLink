@@ -5,6 +5,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useLanguage } from "@/lib/context/language-context";
+import ChatBot from "@/components/ChatBot";
+import { useState } from "react";
 
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -27,6 +29,7 @@ const scaleIn = {
 
 export default function SupportPage() {
     const { t } = useLanguage();
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     const faqs = [
         { q: t("support.faq.q1"), a: t("support.faq.a1") },
@@ -37,7 +40,7 @@ export default function SupportPage() {
     ];
 
     const contactOptions = [
-        { icon: MessageCircle, label: t("support.contact.chat"), desc: t("support.contact.chat_desc"), color: "#22C55E", bg: "rgba(34,197,94,0.1)" },
+        { icon: MessageCircle, label: t("support.contact.chat"), desc: t("support.contact.chat_desc"), color: "#22C55E", bg: "rgba(34,197,94,0.1)", onClick: () => setIsChatOpen(true) },
         { icon: Mail, label: t("support.contact.email"), desc: t("support.contact.email_desc"), color: "#3B82F6", bg: "rgba(59,130,246,0.1)" },
         { icon: Phone, label: t("support.contact.call"), desc: t("support.contact.call_desc"), color: "#F59E0B", bg: "rgba(245,158,11,0.1)" },
     ];
@@ -84,7 +87,8 @@ export default function SupportPage() {
                                     animate="visible"
                                     whileHover={{ y: -4, scale: 1.02 }}
                                     whileTap={{ scale: 0.97 }}
-                                    className="bg-surface-50 hover:bg-surface-100 rounded-2xl p-4 flex flex-col items-center gap-2.5 transition-colors text-center"
+                                    onClick={opt.onClick}
+                                    className="bg-surface-50 hover:bg-surface-100 rounded-2xl p-4 flex flex-col items-center gap-2.5 transition-colors text-center w-full"
                                 >
                                     <motion.div
                                         animate={{ rotate: [0, 3, -3, 0] }}
@@ -103,6 +107,8 @@ export default function SupportPage() {
                         })}
                     </div>
                 </motion.section>
+
+                <ChatBot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
                 {/* FAQs */}
                 <section className="space-y-3">
