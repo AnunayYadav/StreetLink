@@ -1,21 +1,33 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export type UserRole = "guest" | "user" | "merchant";
 
 export interface UserProfile {
+    id: string;
     name: string;
     email: string;
+    role: UserRole;
+    avatar_url?: string;
     createdAt: string;
 }
 
 export interface MerchantProfile {
-    shopName: string;
+    id: string;
+    owner_id: string;
+    name: string;
+    description: string | null;
     categories: string[];
-    phone: string;
-    email: string;
-    address: string;
+    phone: string | null;
+    address: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    is_verified: boolean;
+    logo_url: string | null;
+    createdAt: string;
 }
 
 interface AuthContextType {
@@ -25,131 +37,146 @@ interface AuthContextType {
     isMerchant: boolean;
     user: UserProfile | null;
     merchantProfile: MerchantProfile | null;
+    isLoading: boolean;
     signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-    loginAsMerchant: (profile: MerchantProfile) => void;
-    logout: () => void;
+    refreshProfile: () => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const AUTH_KEY = "streetlink_auth";
-const USERS_KEY = "streetlink_users";
-
-// Simple local user store — ready to be replaced with Supabase
-function getStoredUsers(): Record<string, { name: string; email: string; password: string; createdAt: string }> {
-    try {
-        const data = localStorage.getItem(USERS_KEY);
-        return data ? JSON.parse(data) : {};
-    } catch {
-        return {};
-    }
-}
-
-function saveUser(email: string, name: string, password: string) {
-    const users = getStoredUsers();
-    users[email.toLowerCase()] = { name, email: email.toLowerCase(), password, createdAt: new Date().toISOString() };
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [role, setRole] = useState<UserRole>("guest");
     const [user, setUser] = useState<UserProfile | null>(null);
     const [merchantProfile, setMerchantProfile] = useState<MerchantProfile | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const supabase = createClient();
+    const router = useRouter();
 
-    // Load persisted auth on mount
-    useEffect(() => {
+    const fetchProfile = useCallback(async (userId: string) => {
         try {
-            const stored = localStorage.getItem(AUTH_KEY);
-            if (stored) {
-                const data = JSON.parse(stored);
-                if (data.user) {
-                    setUser(data.user);
-                    if (data.role === "merchant" && data.merchantProfile) {
-                        setRole("merchant");
-                        setMerchantProfile(data.merchantProfile);
-                    } else {
-                        setRole("user");
-                    }
+            // Get user profile
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', userId)
+                .single();
+
+            if (profileError || !profile) {
+                console.error("Error fetching profile:", profileError);
+                return;
+            }
+
+            const mappedUser: UserProfile = {
+                id: profile.id,
+                name: profile.full_name || 'User',
+                email: profile.email,
+                role: (profile.role as UserRole) || 'user',
+                avatar_url: profile.avatar_url,
+                createdAt: profile.created_at
+            };
+
+            setUser(mappedUser);
+            setRole(mappedUser.role);
+
+            // If merchant, get shop profile
+            if (mappedUser.role === 'merchant') {
+                const { data: shop, error: shopError } = await supabase
+                    .from('shops')
+                    .select('*')
+                    .eq('owner_id', userId)
+                    .single();
+
+                if (!shopError && shop) {
+                    setMerchantProfile({
+                        id: shop.id,
+                        owner_id: shop.owner_id,
+                        name: shop.name,
+                        description: shop.description,
+                        categories: shop.categories || [],
+                        phone: shop.phone,
+                        address: shop.address,
+                        latitude: shop.latitude,
+                        longitude: shop.longitude,
+                        is_verified: shop.is_verified,
+                        logo_url: shop.logo_url,
+                        createdAt: shop.created_at
+                    });
                 }
             }
-        } catch {
-            // ignore parse errors
+        } catch (err) {
+            console.error("Auth initialization error:", err);
         }
-    }, []);
+    }, [supabase]);
 
-    const persistAuth = useCallback((r: UserRole, u: UserProfile | null, mp: MerchantProfile | null) => {
-        localStorage.setItem(AUTH_KEY, JSON.stringify({ role: r, user: u, merchantProfile: mp }));
-    }, []);
+    useEffect(() => {
+        if (!isSupabaseConfigured()) {
+            setIsLoading(false);
+            return;
+        }
+
+        const initAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                await fetchProfile(session.user.id);
+            }
+            setIsLoading(false);
+        };
+
+        initAuth();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                await fetchProfile(session.user.id);
+                setIsLoading(false);
+            } else if (event === 'SIGNED_OUT') {
+                setUser(null);
+                setRole("guest");
+                setMerchantProfile(null);
+                setIsLoading(false);
+                router.push('/');
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, [supabase, fetchProfile, router]);
 
     const signup = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-        const users = getStoredUsers();
-        const key = email.toLowerCase();
-
-        if (users[key]) {
-            return { success: false, error: "An account with this email already exists" };
-        }
-        if (password.length < 6) {
-            return { success: false, error: "Password must be at least 6 characters" };
-        }
-
-        saveUser(email, name, password);
-        const profile: UserProfile = { name, email: key, createdAt: new Date().toISOString() };
-        setUser(profile);
-        setRole("user");
-        persistAuth("user", profile, null);
-
-        return { success: true };
-    }, [persistAuth]);
-
-    const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-        const users = getStoredUsers();
-        const key = email.toLowerCase();
-        const stored = users[key];
-
-        if (!stored) {
-            return { success: false, error: "No account found with this email" };
-        }
-        if (stored.password !== password) {
-            return { success: false, error: "Incorrect password" };
-        }
-
-        const profile: UserProfile = { name: stored.name, email: stored.email, createdAt: stored.createdAt };
-        setUser(profile);
-
-        // Check if this user was previously a merchant
-        try {
-            const authData = localStorage.getItem(AUTH_KEY);
-            if (authData) {
-                const parsed = JSON.parse(authData);
-                if (parsed.user?.email === key && parsed.role === "merchant" && parsed.merchantProfile) {
-                    setRole("merchant");
-                    setMerchantProfile(parsed.merchantProfile);
-                    persistAuth("merchant", profile, parsed.merchantProfile);
-                    return { success: true };
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: name,
                 }
             }
-        } catch {
-            // continue with user role
-        }
+        });
 
-        setRole("user");
-        persistAuth("user", profile, null);
+        if (error) return { success: false, error: error.message };
         return { success: true };
-    }, [persistAuth]);
+    }, [supabase]);
 
-    const loginAsMerchant = useCallback((profile: MerchantProfile) => {
-        setRole("merchant");
-        setMerchantProfile(profile);
-        persistAuth("merchant", user, profile);
-    }, [user, persistAuth]);
+    const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+        });
 
-    const logout = useCallback(() => {
-        setRole("guest");
-        setUser(null);
-        setMerchantProfile(null);
-        localStorage.removeItem(AUTH_KEY);
-    }, []);
+        if (error) return { success: false, error: error.message };
+        return { success: true };
+    }, [supabase]);
+
+    const logout = useCallback(async () => {
+        await supabase.auth.signOut();
+    }, [supabase]);
+
+    const refreshProfile = useCallback(async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+            await fetchProfile(session.user.id);
+        }
+    }, [supabase, fetchProfile]);
 
     return (
         <AuthContext.Provider
@@ -160,10 +187,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isMerchant: role === "merchant",
                 user,
                 merchantProfile,
+                isLoading,
                 signup,
                 login,
-                loginAsMerchant,
                 logout,
+                refreshProfile
             }}
         >
             {children}

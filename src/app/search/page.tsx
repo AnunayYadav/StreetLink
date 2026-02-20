@@ -1,41 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     Search, MapPin, Star, ArrowLeft, Store,
     Cherry, Salad, UtensilsCrossed, Scissors, Wrench, ShoppingBasket,
-    Coffee, Shirt, Pill, Bike, Sparkles, Compass, LayoutGrid
+    Coffee, Shirt, Pill, Bike, Sparkles, Compass, LayoutGrid, Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/lib/context/language-context";
-
-const VENDORS: any[] = [];
+import { createClient } from "@/lib/supabase/client";
 
 export default function CustomerDiscovery() {
     const { t } = useLanguage();
     const [activeCategory, setActiveCategory] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
+    const [vendors, setVendors] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const supabase = createClient();
+
+    const fetchVendors = useCallback(async () => {
+        setIsLoading(true);
+        let query = supabase
+            .from('shops')
+            .select('*');
+
+        if (activeCategory !== "all") {
+            query = query.contains('categories', [activeCategory]);
+        }
+
+        if (searchQuery) {
+            query = query.ilike('name', `%${searchQuery}%`);
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
+
+        if (!error && data) {
+            setVendors(data);
+        }
+        setIsLoading(false);
+    }, [activeCategory, searchQuery, supabase]);
+
+    useEffect(() => {
+        fetchVendors();
+    }, [fetchVendors]);
 
     const categories = [
         { key: "all", label: t("common.all"), icon: LayoutGrid, color: "" },
-        { key: "grocery", label: t("cat.grocery"), icon: ShoppingBasket, color: "#3B82F6" },
-        { key: "food", label: t("cat.food"), icon: UtensilsCrossed, color: "#F59E0B" },
-        { key: "clothing", label: t("cat.clothing"), icon: Shirt, color: "#EC4899" },
-        { key: "fruits", label: t("cat.fruits"), icon: Cherry, color: "#F43F5E" },
-        { key: "vegetables", label: t("cat.vegetables"), icon: Salad, color: "#22C55E" },
-        { key: "tailoring", label: t("cat.tailoring"), icon: Scissors, color: "#A855F7" },
-        { key: "repair", label: t("cat.repair"), icon: Wrench, color: "#64748B" },
-        { key: "pharmacy", label: t("cat.pharmacy"), icon: Pill, color: "#14B8A6" },
-        { key: "cafe", label: t("cat.cafe"), icon: Coffee, color: "#D97706" },
-        { key: "delivery", label: t("onboarding.register"), icon: Bike, color: "#E23744" },
+        { key: "Grocery", label: t("cat.grocery"), icon: ShoppingBasket, color: "#3B82F6" },
+        { key: "Street Food", label: t("cat.food"), icon: UtensilsCrossed, color: "#F59E0B" },
+        { key: "Clothing", label: t("cat.clothing"), icon: Shirt, color: "#EC4899" },
+        { key: "Fruits", label: t("cat.fruits"), icon: Cherry, color: "#F43F5E" },
+        { key: "Vegetables", label: t("cat.vegetables"), icon: Salad, color: "#22C55E" },
+        { key: "Tailoring", label: t("cat.tailoring"), icon: Scissors, color: "#A855F7" },
+        { key: "Repair", label: t("cat.repair"), icon: Wrench, color: "#64748B" },
+        { key: "Pharmacy", label: t("cat.pharmacy"), icon: Pill, color: "#14B8A6" },
+        { key: "Cafe & Tea", label: t("cat.cafe"), icon: Coffee, color: "#D97706" },
+        { key: "Others", label: t("onboarding.others"), icon: Sparkles, color: "#E23744" },
     ];
 
     const trendingSearches = [
         "Tailor near me", "Fresh vegetables", "Phone repair",
         "Chai stall", "Grocery store", "Medical shop",
-        "Clothes alteration", "Cycle repair", "Stationery",
-        "Salon", "Bakery", "Key maker"
     ];
 
     const fadeUp = {
@@ -113,7 +139,7 @@ export default function CustomerDiscovery() {
             <main className="w-full pb-24">
                 <div className="max-w-3xl mx-auto px-5 md:px-8 space-y-6 pt-2">
 
-                    {/* Category Tabs — icon-based scroll with all vendor types */}
+                    {/* Category Tabs */}
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -151,44 +177,10 @@ export default function CustomerDiscovery() {
                         </div>
                     </motion.div>
 
-                    {/* Featured Banner — generic marketplace */}
-                    <motion.section
-                        custom={1}
-                        variants={fadeUp}
-                        initial="hidden"
-                        animate="visible"
-                        className="rounded-2xl h-48 md:h-56 relative overflow-hidden group"
-                    >
-                        <img
-                            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=1200"
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2000ms]"
-                            alt="Local marketplace"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5, duration: 0.6 }}
-                            className="absolute bottom-5 left-5 right-5 text-white space-y-1.5"
-                        >
-                            <motion.div
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.6 }}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary rounded-md text-[9px] font-semibold uppercase tracking-wider"
-                            >
-                                <Sparkles size={10} fill="currentColor" strokeWidth={0} />
-                                {t("explorer.your_neighbourhood")}
-                            </motion.div>
-                            <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">{t("explorer.one_tap")}</h2>
-                            <p className="text-white/60 text-xs max-w-sm">{t("explorer.one_tap_desc")}</p>
-                        </motion.div>
-                    </motion.section>
-
                     {/* Quick Stats */}
                     <div className="grid grid-cols-3 gap-3">
                         {[
-                            { val: "0", label: t("explorer.shops_nearby"), color: "" },
+                            { val: vendors.length.toString(), label: t("explorer.shops_nearby"), color: "" },
                             { val: "10+", label: t("explorer.categories_stat"), color: "" },
                             { val: t("explorer.live"), label: t("explorer.market_status"), color: "text-primary" },
                         ].map((stat, i) => (
@@ -207,40 +199,16 @@ export default function CustomerDiscovery() {
                         ))}
                     </div>
 
-                    {/* Trending Searches */}
-                    <motion.section custom={5} variants={fadeUp} initial="hidden" animate="visible" className="space-y-2.5">
-                        <h3 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">{t("explorer.popular")}</h3>
-                        <motion.div
-                            variants={staggerContainer}
-                            initial="hidden"
-                            animate="visible"
-                            className="flex flex-wrap gap-2"
-                        >
-                            {trendingSearches.map(tag => (
-                                <motion.button
-                                    key={tag}
-                                    variants={chipVariant}
-                                    whileHover={{ scale: 1.08, y: -1 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => setSearchQuery(tag)}
-                                    className="px-3 py-1.5 bg-surface-50 hover:bg-surface-100 rounded-lg text-xs font-medium text-surface-500 hover:text-primary transition-colors"
-                                >
-                                    {tag}
-                                </motion.button>
-                            ))}
-                        </motion.div>
-                    </motion.section>
-
                     {/* Vendor List */}
                     <motion.section custom={6} variants={fadeUp} initial="hidden" animate="visible" className="space-y-3">
                         <div className="flex items-center justify-between ml-0.5">
                             <h3 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider">{t("explorer.nearby")}</h3>
-                            <span className="text-[10px] text-surface-300">{t("explorer.nearby_desc")}</span>
+                            {isLoading && <Loader2 className="animate-spin text-primary" size={14} />}
                         </div>
 
-                        {VENDORS.length > 0 ? (
+                        {vendors.length > 0 ? (
                             <div className="space-y-3">
-                                {VENDORS.map((vendor, i) => (
+                                {vendors.map((vendor, i) => (
                                     <Link key={vendor.id} href={`/shop/${vendor.id}`}>
                                         <motion.div
                                             initial={{ opacity: 0, x: -20 }}
@@ -251,24 +219,28 @@ export default function CustomerDiscovery() {
                                             className="bg-surface-50 rounded-2xl p-3 flex gap-3 items-center hover:bg-surface-100 transition-colors"
                                         >
                                             <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-100 shrink-0">
-                                                <img src={vendor.image} alt={vendor.name} className="w-full h-full object-cover" />
+                                                <img
+                                                    src={vendor.logo_url || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=200"}
+                                                    alt={vendor.name}
+                                                    className="w-full h-full object-cover"
+                                                />
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <h4 className="font-semibold text-sm text-surface-900 truncate">{vendor.name}</h4>
-                                                <p className="text-xs text-surface-400 mt-0.5">{vendor.category} • {vendor.distance}</p>
+                                                <p className="text-xs text-surface-400 mt-0.5">{vendor.categories?.slice(0, 2).join(", ")} • Local</p>
                                             </div>
                                             <div className="flex flex-col items-end gap-1 shrink-0">
-                                                <div className="flex items-center gap-1 text-xs font-medium text-primary">
+                                                <div className="flex items-center gap-1 text-xs font-medium text-emerald-500">
                                                     <Star size={12} fill="currentColor" strokeWidth={0} />
-                                                    {vendor.rating}
+                                                    4.5
                                                 </div>
-                                                <span className="text-[10px] text-surface-400">{vendor.priceRange}</span>
+                                                <span className="text-[10px] text-surface-400">Verified</span>
                                             </div>
                                         </motion.div>
                                     </Link>
                                 ))}
                             </div>
-                        ) : (
+                        ) : !isLoading ? (
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -285,7 +257,7 @@ export default function CustomerDiscovery() {
                                 <p className="font-semibold text-sm text-surface-900 mb-1">{t("explorer.no_results")}</p>
                                 <p className="text-sm text-surface-400 max-w-xs">{t("explorer.inventory_updates")}</p>
                             </motion.div>
-                        )}
+                        ) : null}
                     </motion.section>
                 </div>
             </main>

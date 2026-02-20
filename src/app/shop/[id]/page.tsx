@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     ArrowLeft,
     ShoppingCart,
@@ -13,26 +13,57 @@ import {
     ChevronRight,
     Share2,
     Heart,
-    Info
+    Info,
+    Loader2,
+    Store
 } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/lib/context/language-context";
-
-const SHOP: any = {
-    name: "Vendor Store",
-    category: "General Merchant",
-    address: "Auto-locating...",
-    rating: 0,
-    reviews: 0,
-    image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=800",
-    products: []
-};
+import { createClient } from "@/lib/supabase/client";
 
 export default function ShopView() {
     const { t } = useLanguage();
+    const params = useParams();
+    const [shop, setShop] = useState<any>(null);
+    const [products, setProducts] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [cart, setCart] = useState<Record<string, number>>({});
     const [isLiked, setIsLiked] = useState(false);
+    const supabase = createClient();
+
+    const fetchShopData = useCallback(async () => {
+        setIsLoading(true);
+        const { id } = params;
+
+        // Fetch Shop
+        const { data: shopData, error: shopError } = await supabase
+            .from('shops')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (!shopError && shopData) {
+            setShop(shopData);
+
+            // Fetch Products
+            const { data: productData, error: productError } = await supabase
+                .from('products')
+                .select('*')
+                .eq('shop_id', id)
+                .is('is_available', true);
+
+            if (!productError && productData) {
+                setProducts(productData);
+            }
+        }
+        setIsLoading(false);
+    }, [params, supabase]);
+
+    useEffect(() => {
+        fetchShopData();
+    }, [fetchShopData]);
 
     const addToCart = (id: string) => {
         setCart(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
@@ -48,15 +79,43 @@ export default function ShopView() {
 
     const cartTotalCount = Object.values(cart).reduce((a, b) => a + b, 0);
     const cartTotalPrice = Object.entries(cart).reduce((total, [id, qty]) => {
-        const product = SHOP.products.find((p: any) => p.id === id);
+        const product = products.find((p: any) => p.id === id);
         return total + (product?.price || 0) * qty;
     }, 0);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" />
+                <p className="text-sm font-bold text-surface-400 uppercase tracking-widest italic">{t("shop.loading") || "Synchronizing Marketplace..."}</p>
+            </div>
+        );
+    }
+
+    if (!shop) {
+        return (
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+                <div className="w-20 h-20 bg-surface-50 rounded-3xl flex items-center justify-center text-surface-200 mb-6">
+                    <Store size={40} />
+                </div>
+                <h1 className="text-2xl font-black text-surface-900 mb-2">Shop Not Found</h1>
+                <p className="text-surface-400 max-w-xs mb-8">The shop you are looking for might have moved or is temporarily offline.</p>
+                <Link href="/search" className="bg-primary text-white h-12 px-8 rounded-xl font-bold flex items-center gap-2">
+                    <ArrowLeft size={18} /> Back to Market
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-surface-50 pb-40">
             {/* Immersive Header */}
             <div className="relative h-[450px] md:h-[600px] overflow-hidden">
-                <img src={SHOP.image} alt={SHOP.name} className="w-full h-full object-cover scale-105" />
+                <img
+                    src={shop.logo_url || "https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=800"}
+                    alt={shop.name}
+                    className="w-full h-full object-cover scale-105"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-surface-900 via-surface-900/20 to-transparent" />
 
                 <div className="absolute top-10 left-0 w-full z-20">
@@ -81,14 +140,16 @@ export default function ShopView() {
                 <div className="absolute bottom-20 left-0 w-full text-white">
                     <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-4">
                         <div className="flex items-center gap-3">
-                            <span className="px-5 py-2 bg-primary text-[11px] font-black rounded-xl uppercase tracking-[0.2em] shadow-accent">{t("shop.verified")}</span>
+                            <span className="px-5 py-2 bg-primary text-[11px] font-black rounded-xl uppercase tracking-[0.2em] shadow-accent">
+                                {shop.is_verified ? t("shop.verified") : "Local Vendor"}
+                            </span>
                         </div>
                         <div className="max-w-3xl">
-                            <h1 className="text-5xl md:text-7xl font-black mb-3 tracking-tighter leading-none">{SHOP.name}</h1>
+                            <h1 className="text-5xl md:text-7xl font-black mb-3 tracking-tighter leading-none">{shop.name}</h1>
                             <div className="flex items-center gap-6 text-white/60 text-lg font-bold">
                                 <p className="flex items-center gap-2">
                                     <MapPin size={24} className="text-primary shrink-0" />
-                                    {SHOP.address}
+                                    {shop.address || "Area Merchant"}
                                 </p>
                             </div>
                         </div>
@@ -97,17 +158,17 @@ export default function ShopView() {
             </div>
 
             {/* Shop Interaction Cards */}
-            <div className="max-w-7xl mx-auto px-6 md:px-12 -mt-16 md:-mt-24 relative z-10 grid md:grid-cols-4 gap-6">
-                <a href="tel:123" className="md:col-span-1 glass-card p-8 flex flex-col gap-4 group hover:border-primary/20 transition-all border border-border-subtle shadow-premium">
+            <div className="max-w-7xl mx-auto px-6 md:px-12 -mt-16 md:-mt-24 relative z-10 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <a href={`tel:${shop.phone || ''}`} className="glass-card p-8 flex flex-col gap-4 group hover:border-primary/20 transition-all border border-border-subtle shadow-premium">
                     <div className="w-14 h-14 glass text-primary rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner border border-primary/10">
                         <Phone size={28} strokeWidth={3} />
                     </div>
                     <div>
                         <p className="font-black text-[11px] uppercase tracking-[0.2em] text-surface-900 group-hover:text-primary transition-colors">{t("shop.call")}</p>
-                        <p className="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest italic">{t("shop.instant_support")}</p>
+                        <p className="text-[10px] font-bold text-muted mt-1 uppercase tracking-widest italic">{shop.phone || t("shop.instant_support")}</p>
                     </div>
                 </a>
-                <a href="wa.me" className="md:col-span-1 glass-card p-8 flex flex-col gap-4 group hover:border-emerald-500/20 transition-all border border-border-subtle shadow-premium">
+                <a href={`https://wa.me/${shop.phone?.replace('+', '').replace(' ', '') || ''}`} className="glass-card p-8 flex flex-col gap-4 group hover:border-emerald-500/20 transition-all border border-border-subtle shadow-premium">
                     <div className="w-14 h-14 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner border border-emerald-500/10">
                         <MessageCircle size={28} strokeWidth={3} />
                     </div>
@@ -117,19 +178,18 @@ export default function ShopView() {
                     </div>
                 </a>
 
-                {/* Wide Shop Stats for Desktop */}
-                <div className="md:col-span-2 glass-card p-8 text-foreground flex items-center justify-around shadow-premium relative overflow-hidden border border-border-subtle">
+                <div className="lg:col-span-2 glass-card p-8 text-foreground flex items-center justify-around shadow-premium relative overflow-hidden border border-border-subtle">
                     <div className="absolute left-0 top-0 w-full h-full bg-[radial-gradient(circle_at_30%_30%,var(--primary),transparent)] opacity-5" />
                     <div className="text-center relative z-10">
                         <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2">{t("shop.rating")}</p>
                         <p className="text-3xl font-black flex items-center gap-2 justify-center text-surface-900">
-                            <Star size={24} fill="var(--primary)" strokeWidth={0} /> {SHOP.rating}
+                            <Star size={24} fill="var(--primary)" strokeWidth={0} /> 4.5
                         </p>
                     </div>
                     <div className="w-px h-12 bg-border-subtle" />
                     <div className="text-center relative z-10">
                         <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2">{t("shop.happy_souls")}</p>
-                        <p className="text-3xl font-black text-surface-900">{SHOP.reviews}</p>
+                        <p className="text-3xl font-black text-surface-900">20+</p>
                     </div>
                     <div className="w-px h-12 bg-border-subtle" />
                     <div className="text-center relative z-10">
@@ -152,19 +212,23 @@ export default function ShopView() {
                 </div>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                    {SHOP.products.length > 0 ? SHOP.products.map((product: any) => (
+                    {products.length > 0 ? products.map((product: any) => (
                         <motion.div
                             key={product.id}
                             layout
                             className="card-premium p-6 flex flex-col gap-6 bg-card-bg border-2 border-transparent hover:border-primary/10 transition-all duration-500 group overflow-hidden"
                         >
                             <div className="w-full h-56 rounded-[32px] overflow-hidden bg-surface-50 shadow-inner group-hover:rotate-2 transition-transform duration-700">
-                                <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                <img
+                                    src={product.image_url || "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&q=80&w=400"}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                />
                             </div>
                             <div className="flex-1 flex flex-col pt-2">
                                 <div className="space-y-1 mb-6">
                                     <h4 className="font-black text-surface-900 text-2xl tracking-tighter leading-tight group-hover:text-primary transition-colors">{product.name}</h4>
-                                    <p className="text-[11px] font-black text-muted uppercase tracking-[0.2em] italic">{t("shop.fresh_stock", product.unit)}</p>
+                                    <p className="text-[11px] font-black text-muted uppercase tracking-[0.2em] italic">Fresh Stock / {product.category || 'Unit'}</p>
                                 </div>
 
                                 <div className="mt-auto flex justify-between items-center bg-surface-50 p-4 rounded-3xl shadow-inner border border-border-subtle">

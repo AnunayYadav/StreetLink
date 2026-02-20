@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     ArrowLeft,
     Plus,
@@ -11,12 +11,14 @@ import {
     ChevronRight,
     TrendingUp,
     CircleCheck,
-    Package
+    Package,
+    Loader2
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-
-const INITIAL_PRODUCTS: any[] = [];
+import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/lib/context/auth-context";
 
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -28,31 +30,87 @@ const fadeUp = {
 };
 
 export default function ProductManagement() {
-    const [products, setProducts] = useState(INITIAL_PRODUCTS);
+    const { user, merchantProfile, isMerchant } = useAuth();
+    const [products, setProducts] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [activeFilter, setActiveFilter] = useState("all");
-    const [newProduct, setNewProduct] = useState({ name: "", price: "", unit: "kg" });
+    const [newProduct, setNewProduct] = useState({ name: "", price: "", unit: "kg", description: "" });
+    const router = useRouter();
+    const supabase = createClient();
 
-    const addProduct = () => {
-        if (!newProduct.name || !newProduct.price) return;
-        const item = {
-            id: Date.now().toString(),
-            ...newProduct,
-            price: Number(newProduct.price),
-            isAvailable: true,
-            image: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&q=80&w=200"
-        };
-        setProducts([item, ...products]);
-        setIsAdding(false);
-        setNewProduct({ name: "", price: "", unit: "kg" });
+    const fetchProducts = useCallback(async () => {
+        if (!merchantProfile) return;
+        setIsLoading(true);
+        const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('shop_id', merchantProfile.id)
+            .order('created_at', { ascending: false });
+
+        if (!error && data) {
+            setProducts(data);
+        }
+        setIsLoading(false);
+    }, [merchantProfile, supabase]);
+
+    useEffect(() => {
+        if (!isMerchant && !isLoading) {
+            router.replace('/onboarding');
+            return;
+        }
+        fetchProducts();
+    }, [isMerchant, isLoading, fetchProducts, router]);
+
+    const addProduct = async () => {
+        if (!newProduct.name || !newProduct.price || !merchantProfile) return;
+        setIsSaving(true);
+
+        const { data, error } = await supabase
+            .from('products')
+            .insert({
+                shop_id: merchantProfile.id,
+                name: newProduct.name,
+                description: newProduct.description,
+                price: Number(newProduct.price),
+                category: newProduct.unit, // Reusing unit for category for now or stick to it
+                image_url: "https://images.unsplash.com/photo-1550989460-0adf9ea622e2?auto=format&fit=crop&q=80&w=200",
+                is_available: true
+            })
+            .select()
+            .single();
+
+        if (!error && data) {
+            setProducts([data, ...products]);
+            setIsAdding(false);
+            setNewProduct({ name: "", price: "", unit: "kg", description: "" });
+        } else {
+            alert(error?.message || "Failed to add product");
+        }
+        setIsSaving(false);
     };
 
-    const deleteProduct = (id: string) => {
-        setProducts(products.filter(p => p.id !== id));
+    const deleteProduct = async (id: string) => {
+        const { error } = await supabase
+            .from('products')
+            .delete()
+            .eq('id', id);
+
+        if (!error) {
+            setProducts(products.filter(p => p.id !== id));
+        }
     };
 
-    const toggleAvailability = (id: string) => {
-        setProducts(products.map(p => p.id === id ? { ...p, isAvailable: !p.isAvailable } : p));
+    const toggleAvailability = async (id: string, current: boolean) => {
+        const { error } = await supabase
+            .from('products')
+            .update({ is_available: !current })
+            .eq('id', id);
+
+        if (!error) {
+            setProducts(products.map(p => p.id === id ? { ...p, is_available: !current } : p));
+        }
     };
 
     const filters = [
@@ -62,10 +120,18 @@ export default function ProductManagement() {
     ];
 
     const filteredProducts = products.filter(p => {
-        if (activeFilter === "live") return p.isAvailable;
-        if (activeFilter === "draft") return !p.isAvailable;
+        if (activeFilter === "live") return p.is_available;
+        if (activeFilter === "draft") return !p.is_available;
         return true;
     });
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background pb-24">
@@ -107,7 +173,7 @@ export default function ProductManagement() {
                     <div className="grid grid-cols-3 gap-3">
                         {[
                             { icon: Package, val: products.length, label: "Total Items", color: "bg-primary/10 text-primary" },
-                            { icon: CircleCheck, val: products.filter(p => p.isAvailable).length, label: "Live", color: "bg-emerald-500/10 text-emerald-500" },
+                            { icon: CircleCheck, val: products.filter(p => p.is_available).length, label: "Live", color: "bg-emerald-500/10 text-emerald-500" },
                             { icon: TrendingUp, val: "0%", label: "Growth", color: "bg-amber-500/10 text-amber-500" },
                         ].map((stat, i) => {
                             const Icon = stat.icon;
@@ -138,7 +204,7 @@ export default function ProductManagement() {
                                 key={f.key}
                                 onClick={() => setActiveFilter(f.key)}
                                 className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all relative ${activeFilter === f.key
-                                    ? 'text-surface-900 shadow-sm'
+                                    ? 'text-surface-900'
                                     : 'text-surface-400 hover:text-surface-500'
                                     }`}
                             >
@@ -165,26 +231,25 @@ export default function ProductManagement() {
                                     animate={{ opacity: 1, x: 0, scale: 1 }}
                                     exit={{ opacity: 0, x: 30, scale: 0.95 }}
                                     transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                                    whileHover={{ x: 3 }}
-                                    className={`bg-surface-50 rounded-2xl p-3 flex gap-3 items-center ${!product.isAvailable ? 'opacity-50' : ''}`}
+                                    className={`bg-surface-50 rounded-2xl p-3 flex gap-3 items-center ${!product.is_available ? 'opacity-50' : ''}`}
                                 >
                                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-100 shrink-0">
-                                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                                        <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="font-semibold text-sm text-surface-900 truncate">{product.name}</h4>
-                                        <p className="text-primary font-bold text-sm mt-0.5">₹{product.price} <span className="text-xs text-surface-400 font-normal">/ {product.unit}</span></p>
+                                        <p className="text-primary font-bold text-sm mt-0.5">₹{product.price} <span className="text-xs text-surface-400 font-normal">/ {product.category || 'unit'}</span></p>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
                                         <motion.button
                                             whileTap={{ scale: 0.9 }}
-                                            onClick={() => toggleAvailability(product.id)}
-                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${product.isAvailable
+                                            onClick={() => toggleAvailability(product.id, product.is_available)}
+                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${product.is_available
                                                 ? 'bg-emerald-500/10 text-emerald-600'
                                                 : 'bg-surface-100 text-surface-400'
                                                 }`}
                                         >
-                                            {product.isAvailable ? 'Live' : 'Draft'}
+                                            {product.is_available ? 'Live' : 'Draft'}
                                         </motion.button>
                                         <motion.button
                                             whileHover={{ scale: 1.1 }}
@@ -312,37 +377,16 @@ export default function ProductManagement() {
                                         whileHover={{ scale: 1.01 }}
                                         whileTap={{ scale: 0.97 }}
                                         onClick={addProduct}
-                                        className="w-full bg-primary hover:bg-primary-dark text-white h-12 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                                        disabled={isSaving}
+                                        className="w-full bg-primary hover:bg-primary-dark text-white h-12 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-70"
                                     >
-                                        Add to Catalog
-                                        <ChevronRight size={16} strokeWidth={2.5} />
+                                        {isSaving ? <Loader2 className="animate-spin" size={18} /> : "Add to Catalog"}
+                                        {!isSaving && <ChevronRight size={16} strokeWidth={2.5} />}
                                     </motion.button>
                                 </div>
                             </div>
                         </motion.div>
                     </>
-                )}
-            </AnimatePresence>
-
-            {/* Bottom Save Bar */}
-            <AnimatePresence>
-                {products.length > 0 && (
-                    <motion.div
-                        initial={{ y: 80 }}
-                        animate={{ y: 0 }}
-                        exit={{ y: 80 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="fixed bottom-0 left-0 w-full p-4 bg-background/90 backdrop-blur-xl z-30"
-                    >
-                        <div className="max-w-3xl mx-auto">
-                            <motion.div whileTap={{ scale: 0.98 }}>
-                                <Link href="/dashboard" className="flex w-full bg-primary hover:bg-primary-dark text-white h-12 rounded-xl text-sm font-semibold tracking-wide items-center justify-center gap-2 shadow-lg shadow-primary/20">
-                                    Save & Finish
-                                    <ChevronRight size={16} />
-                                </Link>
-                            </motion.div>
-                        </div>
-                    </motion.div>
                 )}
             </AnimatePresence>
         </div>

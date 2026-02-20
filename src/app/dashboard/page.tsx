@@ -42,10 +42,10 @@ const scaleIn = {
     })
 };
 
-const VENDOR_SLUG = "vendor-store";
+// Shop URL is now dynamic based on merchantProfile.id
 
 export default function VendorDashboard() {
-    const { isMerchant, merchantProfile } = useAuth();
+    const { isLoggedIn, isGuest, user, merchantProfile } = useAuth();
     const { t } = useLanguage();
     const router = useRouter();
     const [showQR, setShowQR] = useState(false);
@@ -54,13 +54,13 @@ export default function VendorDashboard() {
 
     // Redirect guests to onboarding
     useEffect(() => {
-        if (!isMerchant) {
+        if (!isLoggedIn || isGuest) { // Changed condition to check for logged in merchant
             router.replace("/onboarding");
         }
-    }, [isMerchant, router]);
+    }, [isLoggedIn, isGuest, router]);
 
-    const shopUrl = typeof window !== "undefined"
-        ? `${window.location.origin}/shop/${VENDOR_SLUG}`
+    const shopUrl = typeof window !== "undefined" && merchantProfile?.id
+        ? `${window.location.origin}/shop/${merchantProfile.id}`
         : "";
 
     const handleCopyLink = useCallback(() => {
@@ -84,7 +84,7 @@ export default function VendorDashboard() {
             ctx?.drawImage(img, 0, 0);
             const pngFile = canvas.toDataURL("image/png");
             const downloadLink = document.createElement("a");
-            downloadLink.download = `${merchantProfile?.shopName || "shop"}-qr-code.png`;
+            downloadLink.download = `${merchantProfile?.name || "shop"}-qr-code.png`;
             downloadLink.href = pngFile;
             downloadLink.click();
         };
@@ -96,7 +96,7 @@ export default function VendorDashboard() {
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: merchantProfile?.shopName || "StreetLink Shop",
+                    title: merchantProfile?.name || "StreetLink Shop",
                     text: "Check out our products on StreetLink!",
                     url: shopUrl,
                 });
@@ -109,7 +109,7 @@ export default function VendorDashboard() {
     }, [shopUrl, handleCopyLink, merchantProfile]);
 
     // Don't render if not merchant (will redirect)
-    if (!isMerchant) {
+    if (!isLoggedIn || isGuest) { // Changed condition
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <motion.div
@@ -146,11 +146,11 @@ export default function VendorDashboard() {
                             transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 18 }}
                             className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg"
                         >
-                            {merchantProfile?.shopName?.[0]?.toUpperCase() || "M"}
+                            {merchantProfile?.name?.[0]?.toUpperCase() || "M"}
                         </motion.div>
                         <div>
                             <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">{t("dashboard.title")}</p>
-                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">{merchantProfile?.shopName || t("dashboard.title")}</h1>
+                            <h1 className="text-sm font-bold text-surface-900 tracking-tight">{merchantProfile?.name || t("dashboard.title")}</h1>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">

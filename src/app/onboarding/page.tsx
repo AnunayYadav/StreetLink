@@ -13,6 +13,7 @@ import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/context/auth-context";
 import { useLanguage } from "@/lib/context/language-context";
+import { createClient } from "@/lib/supabase/client";
 
 const getCategories = (t: any) => [
     { name: t("cat.fruits"), icon: Cherry, color: "#F43F5E", bg: "rgba(244,63,94,0.1)", key: "Fruits" },
@@ -48,12 +49,13 @@ export default function OnboardingPage() {
     const { t } = useLanguage();
     const router = useRouter();
     const categories = getCategories(t);
-    const { loginAsMerchant, isLoggedIn, isGuest, user } = useAuth();
+    const { isLoggedIn, isGuest, user } = useAuth();
     const [step, setStep] = useState(1);
     const [direction, setDirection] = useState(0);
     const [shopNameError, setShopNameError] = useState("");
     const [categoryError, setCategoryError] = useState("");
     const [locationLoading, setLocationLoading] = useState(false);
+    const [launching, setLaunching] = useState(false);
     const [storePhoto, setStorePhoto] = useState<string | null>(null);
     const [storePhotoName, setStorePhotoName] = useState("");
 
@@ -183,6 +185,49 @@ export default function OnboardingPage() {
         setStorePhoto(null);
         setStorePhotoName("");
         if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
+    const handleLaunch = async () => {
+        if (!user || launching) return;
+        setLaunching(true);
+
+        const supabase = createClient();
+
+        try {
+            // 1. Create/Update Shop
+            const { data: shop, error: shopError } = await supabase
+                .from('shops')
+                .upsert({
+                    owner_id: user.id,
+                    name: formData.shopName,
+                    categories: formData.categories,
+                    phone: formData.phone,
+                    address: formData.address + (formData.addressDetails ? `, ${formData.addressDetails}` : ""),
+                    latitude: formData.location?.lat,
+                    longitude: formData.location?.lng,
+                    logo_url: storePhoto // In a real app, upload this to Supabase Storage first
+                }, { onConflict: 'owner_id' })
+                .select()
+                .single();
+
+            if (shopError) throw shopError;
+
+            // 2. Update User Role to merchant
+            const { error: roleError } = await supabase
+                .from('profiles')
+                .update({ role: 'merchant' })
+                .eq('id', user.id);
+
+            if (roleError) throw roleError;
+
+            // 3. Success
+            router.push('/dashboard');
+        } catch (error: any) {
+            console.error("Launch error:", error);
+            alert(error.message || "Failed to launch shop. Please try again.");
+        } finally {
+            setLaunching(false);
+        }
     };
 
     return (
@@ -771,25 +816,23 @@ export default function OnboardingPage() {
                     <motion.button
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.97 }}
-                        onClick={step === 3 ? () => {
-                            loginAsMerchant({
-                                shopName: formData.shopName,
-                                categories: formData.categories,
-                                phone: formData.phone,
-                                email: formData.email,
-                                address: formData.address,
-                            });
-                            router.push('/dashboard');
-                        } : nextStep}
-                        className="flex-1 bg-primary hover:bg-primary-dark text-white h-12 rounded-xl text-sm font-semibold tracking-wide flex items-center justify-center gap-2 group transition-colors shadow-lg shadow-primary/20"
+                        onClick={step === 3 ? handleLaunch : nextStep}
+                        disabled={launching}
+                        className="flex-1 bg-primary hover:bg-primary-dark text-white h-12 rounded-xl text-sm font-semibold tracking-wide flex items-center justify-center gap-2 group transition-colors shadow-lg shadow-primary/20 disabled:opacity-70"
                     >
-                        <span>{step === 3 ? t("onboarding.launch") : t("onboarding.next_step")}</span>
-                        <motion.div
-                            animate={{ x: [0, 3, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                            <ChevronRight size={16} strokeWidth={2.5} />
-                        </motion.div>
+                        {launching ? (
+                            <Loader2 size={18} className="animate-spin" />
+                        ) : (
+                            <>
+                                <span>{step === 3 ? t("onboarding.launch") : t("onboarding.next_step")}</span>
+                                <motion.div
+                                    animate={{ x: [0, 3, 0] }}
+                                    transition={{ duration: 1.5, repeat: Infinity }}
+                                >
+                                    <ChevronRight size={16} strokeWidth={2.5} />
+                                </motion.div>
+                            </>
+                        )}
                     </motion.button>
                 </div>
             </motion.div>
