@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, Store, ShoppingBag, ShieldCheck, ChevronRight, Zap, Users, Globe, Menu, X, LogIn } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/context/auth-context";
@@ -25,9 +26,21 @@ const fadeUp = {
 };
 
 export default function LandingPage() {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isMerchant, isLoggedIn } = useAuth();
   const { t } = useLanguage();
+
+  // Handle auto-redirect for logged in users
+  useEffect(() => {
+    if (isLoggedIn) {
+      if (isMerchant) {
+        router.replace("/dashboard");
+      } else {
+        router.replace("/search");
+      }
+    }
+  }, [isLoggedIn, isMerchant, router]);
 
   // Nav links are now dynamic inside the component
   const navLinks = [

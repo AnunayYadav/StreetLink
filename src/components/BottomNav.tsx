@@ -24,7 +24,6 @@ export default function BottomNav() {
             { label: t("nav.settings"), icon: User, href: "/settings" },
         ]
         : [
-            { label: t("nav.home"), icon: Home, href: "/" },
             { label: t("nav.explorer"), icon: Search, href: "/search" },
             { label: t("nav.orders"), icon: ShoppingBag, href: "/orders" },
             { label: t("nav.settings"), icon: User, href: "/settings" },

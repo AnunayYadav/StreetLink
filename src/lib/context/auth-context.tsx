@@ -25,8 +25,8 @@ interface AuthContextType {
     isMerchant: boolean;
     user: UserProfile | null;
     merchantProfile: MerchantProfile | null;
-    signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-    login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+    signup: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
+    login: (email: string, password: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
     loginAsMerchant: (profile: MerchantProfile) => void;
     logout: () => void;
 }
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(AUTH_KEY, JSON.stringify({ role: r, user: u, merchantProfile: mp }));
     }, []);
 
-    const signup = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const signup = useCallback(async (name: string, email: string, password: string, role: UserRole): Promise<{ success: boolean; error?: string }> => {
         const users = getStoredUsers();
         const key = email.toLowerCase();
 
@@ -96,13 +96,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         saveUser(email, name, password);
         const profile: UserProfile = { name, email: key, createdAt: new Date().toISOString() };
         setUser(profile);
-        setRole("user");
-        persistAuth("user", profile, null);
+        setRole(role);
+        persistAuth(role, profile, null);
 
         return { success: true };
     }, [persistAuth]);
 
-    const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const login = useCallback(async (email: string, password: string, role: UserRole): Promise<{ success: boolean; error?: string }> => {
         const users = getStoredUsers();
         const key = email.toLowerCase();
         const stored = users[key];
@@ -116,25 +116,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const profile: UserProfile = { name: stored.name, email: stored.email, createdAt: stored.createdAt };
         setUser(profile);
+        setRole(role);
 
-        // Check if this user was previously a merchant
+        // If merchant, try to restore previous shop profile if it exists
+        let currentMerchantProfile: MerchantProfile | null = null;
         try {
             const authData = localStorage.getItem(AUTH_KEY);
             if (authData) {
                 const parsed = JSON.parse(authData);
-                if (parsed.user?.email === key && parsed.role === "merchant" && parsed.merchantProfile) {
-                    setRole("merchant");
-                    setMerchantProfile(parsed.merchantProfile);
-                    persistAuth("merchant", profile, parsed.merchantProfile);
-                    return { success: true };
+                if (parsed.user?.email === key && parsed.merchantProfile) {
+                    currentMerchantProfile = parsed.merchantProfile;
+                    setMerchantProfile(currentMerchantProfile);
                 }
             }
-        } catch {
-            // continue with user role
-        }
+        } catch { /* ignore */ }
 
-        setRole("user");
-        persistAuth("user", profile, null);
+        persistAuth(role, profile, currentMerchantProfile);
         return { success: true };
     }, [persistAuth]);
 
