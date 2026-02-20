@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, Star, ArrowRight, Utensils } from "lucide-react";
+import { Search, MapPin, Star, ArrowRight, ArrowLeft, Utensils } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -58,6 +58,11 @@ export default function CustomerDiscovery() {
                         transition={{ delay: 0.1, duration: 0.4 }}
                         className="flex items-center gap-3 mb-4"
                     >
+                        <motion.div whileHover={{ x: -2 }} whileTap={{ scale: 0.9 }}>
+                            <Link href="/" className="w-10 h-10 bg-surface-50 rounded-xl flex items-center justify-center text-surface-400 hover:text-surface-900 transition-colors">
+                                <ArrowLeft size={18} />
+                            </Link>
+                        </motion.div>
                         <motion.div
                             animate={{ y: [0, -2, 0] }}
                             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}

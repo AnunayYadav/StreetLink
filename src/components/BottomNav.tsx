@@ -2,19 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Wallet, User, ShoppingBag } from "lucide-react";
+import { Search, Home, User, ShoppingBag } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function BottomNav() {
     const pathname = usePathname();
 
     // Don't show on landing page, checkout, or shop views
-    if (pathname === "/" || pathname === "/checkout" || pathname?.startsWith("/shop/")) return null;
+    if (pathname === "/checkout" || pathname?.startsWith("/shop/")) return null;
 
     const navItems = [
+        { label: "Dashboard", icon: Home, href: "/" },
         { label: "Explorer", icon: Search, href: "/search" },
         { label: "Orders", icon: ShoppingBag, href: "/orders" },
-        { label: "Wallet", icon: Wallet, href: "/dashboard" },
         { label: "Profile", icon: User, href: "/onboarding" },
     ];
 
