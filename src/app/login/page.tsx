@@ -11,6 +11,8 @@ import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/context/auth-context";
 
+import { Suspense } from "react";
+
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({
@@ -20,7 +22,7 @@ const fadeUp = {
     })
 };
 
-export default function LoginPage() {
+function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { login, signup, isLoggedIn } = useAuth();
@@ -357,5 +359,17 @@ export default function LoginPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
     );
 }
