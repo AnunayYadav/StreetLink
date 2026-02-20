@@ -1,8 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-
 const SYSTEM_PROMPT = `
 You are the StreetLink AI Sahayak (Assistant), a helpful and premium guide for the StreetLink application.
 StreetLink connects local street vendors (merchants) with modern shoppers. 
@@ -24,52 +22,53 @@ Constraint: ONLY talk about StreetLink. If they ask about unrelated things, poli
 
 export async function POST(req: Request) {
     try {
-        const { message, history } = await req.json();
+        const apiKey = process.env.GEMINI_API_KEY;
 
-        if (!process.env.GEMINI_API_KEY) {
-            return NextResponse.json({ error: "Gemini API key not configured" }, { status: 500 });
+        if (!apiKey) {
+            console.error("GEMINI_API_KEY is not set in environment variables");
+            return NextResponse.json(
+                { error: "API key not configured", detail: "GEMINI_API_KEY env var is missing" },
+                { status: 500 }
+            );
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const { message, history } = await req.json();
+
+        if (!message) {
+            return NextResponse.json({ error: "Message is required" }, { status: 400 });
+        }
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.0-flash",
+            systemInstruction: SYSTEM_PROMPT,
+        });
+
+        const chatHistory = (history || [])
+            .filter((h: any) => h.content && h.content.trim())
+            .map((h: any) => ({
+                role: h.role === "user" ? "user" : "model",
+                parts: [{ text: h.content }],
+            }));
 
         const chat = model.startChat({
-            history: [
-                { role: "user", parts: [{ text: "Hello" }] },
-                { role: "model", parts: [{ text: "Hello! I am the StreetLink Support AI. How can I assist you today?" }] },
-                ...history.map((h: any) => ({
-                    role: h.role === "user" ? "user" : "model",
-                    parts: [{ text: h.content }]
-                }))
-            ],
+            history: chatHistory,
             generationConfig: {
                 maxOutputTokens: 1000,
             },
         });
 
-        // Prepend system prompt to the first user message or handle it as instructions
-        // Gemini 1.5/2.0 supports system instructions specifically if configured, 
-        // but for simplicity here we can use a wrapper or just trust the chat history setup.
-        // Actually, with model.startChat, we should ideally use systemInstruction.
-
-        const modelWithInstructions = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash",
-            systemInstruction: SYSTEM_PROMPT
-        });
-
-        const chatWithInstructions = modelWithInstructions.startChat({
-            history: history.map((h: any) => ({
-                role: h.role === "user" ? "user" : "model",
-                parts: [{ text: h.content }]
-            }))
-        });
-
-        const result = await chatWithInstructions.sendMessage(message);
+        const result = await chat.sendMessage(message);
         const response = await result.response;
         const text = response.text();
 
         return NextResponse.json({ text });
     } catch (error: any) {
-        console.error("Chat API Error:", error);
-        return NextResponse.json({ error: "Failed to process chat" }, { status: 500 });
+        console.error("Chat API Error:", error?.message || error);
+        return NextResponse.json(
+            { error: "Failed to process chat", detail: error?.message || "Unknown error" },
+            { status: 500 }
+        );
     }
 }
