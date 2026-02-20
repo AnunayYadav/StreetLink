@@ -38,8 +38,8 @@ interface AuthContextType {
     user: UserProfile | null;
     merchantProfile: MerchantProfile | null;
     isLoading: boolean;
-    signup: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
     login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+    signup: (name: string, email: string, password: string, role?: UserRole) => Promise<{ success: boolean; error?: string }>;
     refreshProfile: () => Promise<void>;
     logout: () => Promise<void>;
 }
@@ -68,13 +68,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 // This handles cases where the SQL trigger might have failed
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session?.user) {
+                    const metadataRole = session.user.user_metadata?.role || 'user';
                     const { data: newProfile, error: createError } = await supabase
                         .from('profiles')
                         .upsert({
                             id: session.user.id,
                             full_name: session.user.user_metadata?.full_name || 'User',
                             email: session.user.email,
-                            role: 'user'
+                            role: metadataRole
                         })
                         .select()
                         .single();
@@ -166,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => subscription.unsubscribe();
     }, [supabase, fetchProfile, router]);
 
-    const signup = useCallback(async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const signup = useCallback(async (name: string, email: string, password: string, role: UserRole = "user"): Promise<{ success: boolean; error?: string }> => {
         if (!isSupabaseConfigured()) {
             return { success: false, error: "Supabase is not configured. Please add your URL and Key to .env.local" };
         }
@@ -176,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             options: {
                 data: {
                     full_name: name,
+                    role: role
                 }
             }
         });

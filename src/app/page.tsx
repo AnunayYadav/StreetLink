@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Store, ShoppingBag, ShieldCheck, ChevronRight, Zap, Users, Globe, Menu, X, LogIn } from "lucide-react";
+import { ArrowRight, Store, ShoppingBag, ShieldCheck, ChevronRight, Zap, Users, Globe, Menu, X, LogIn, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/lib/context/auth-context";
@@ -26,8 +28,27 @@ const fadeUp = {
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isMerchant, isLoggedIn } = useAuth();
+  const { isMerchant, isLoggedIn, isLoading, role } = useAuth();
   const { t } = useLanguage();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (role === "merchant") {
+        router.replace("/dashboard");
+      } else if (role === "user") {
+        router.replace("/search");
+      }
+    }
+  }, [isLoading, role, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary opacity-20" />
+      </div>
+    );
+  }
 
   // Nav links are now dynamic inside the component
   const navLinks = [
