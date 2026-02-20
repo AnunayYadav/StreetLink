@@ -1,23 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, Star, ArrowRight, ArrowLeft, Utensils } from "lucide-react";
+import {
+    Search, MapPin, Star, ArrowLeft, Store,
+    Cherry, Salad, UtensilsCrossed, Scissors, Wrench, ShoppingBasket,
+    Coffee, Shirt, Pill, Bike, Sparkles, Compass, LayoutGrid
+} from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
 const VENDORS: any[] = [];
 
 const categories = [
-    { key: "all", label: "All" },
-    { key: "food", label: "Street Food" },
-    { key: "snacks", label: "Snacks" },
-    { key: "fresh", label: "Fresh Produce" },
-    { key: "drinks", label: "Drinks" },
-    { key: "desserts", label: "Desserts" },
-    { key: "grocery", label: "Grocery" },
+    { key: "all", label: "All", icon: LayoutGrid, color: "" },
+    { key: "grocery", label: "Grocery", icon: ShoppingBasket, color: "#3B82F6" },
+    { key: "food", label: "Food & Chai", icon: UtensilsCrossed, color: "#F59E0B" },
+    { key: "clothing", label: "Clothing", icon: Shirt, color: "#EC4899" },
+    { key: "fruits", label: "Fruits", icon: Cherry, color: "#F43F5E" },
+    { key: "vegetables", label: "Vegetables", icon: Salad, color: "#22C55E" },
+    { key: "tailoring", label: "Tailoring", icon: Scissors, color: "#A855F7" },
+    { key: "repair", label: "Repair", icon: Wrench, color: "#64748B" },
+    { key: "pharmacy", label: "Pharmacy", icon: Pill, color: "#14B8A6" },
+    { key: "cafe", label: "Café & Tea", icon: Coffee, color: "#D97706" },
+    { key: "delivery", label: "Delivery", icon: Bike, color: "#E23744" },
 ];
 
-const trendingSearches = ["Samosa", "Lassi", "Momos", "Kachori", "Masala Chai", "Paneer Tikka", "Biryani", "Jalebi"];
+const trendingSearches = [
+    "Tailor near me", "Fresh vegetables", "Phone repair",
+    "Chai stall", "Grocery store", "Medical shop",
+    "Clothes alteration", "Cycle repair", "Stationery",
+    "Salon", "Bakery", "Key maker"
+];
 
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -68,7 +81,7 @@ export default function CustomerDiscovery() {
                             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                             className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center"
                         >
-                            <MapPin size={18} />
+                            <Compass size={18} />
                         </motion.div>
                         <div>
                             <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Market Explorer</p>
@@ -86,7 +99,7 @@ export default function CustomerDiscovery() {
                         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-300" size={16} />
                         <input
                             type="text"
-                            placeholder="Search shops, food, products..."
+                            placeholder="Search shops, services, products..."
                             className="w-full h-11 pl-10 pr-4 rounded-xl bg-surface-50 outline-none font-medium text-sm text-surface-900 placeholder:text-surface-300 focus:ring-2 focus:ring-primary/20 transition-all"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -98,35 +111,45 @@ export default function CustomerDiscovery() {
             <main className="w-full pb-24">
                 <div className="max-w-3xl mx-auto px-5 md:px-8 space-y-6 pt-2">
 
-                    {/* Category Tabs */}
+                    {/* Category Tabs — icon-based scroll with all vendor types */}
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.25, duration: 0.4 }}
                         className="overflow-x-auto no-scrollbar -mx-5 px-5"
                     >
-                        <div className="flex gap-2">
-                            {categories.map((cat, i) => (
-                                <motion.button
-                                    key={cat.key}
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: 0.3 + i * 0.04, type: "spring", stiffness: 300, damping: 20 }}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => setActiveCategory(cat.key)}
-                                    className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors shrink-0 ${activeCategory === cat.key
-                                        ? "bg-primary text-white shadow-lg shadow-primary/20"
-                                        : "bg-surface-50 text-surface-500 hover:text-surface-700"
-                                        }`}
-                                >
-                                    {cat.label}
-                                </motion.button>
-                            ))}
+                        <div className="flex gap-3">
+                            {categories.map((cat, i) => {
+                                const IconComp = cat.icon;
+                                const isActive = activeCategory === cat.key;
+                                return (
+                                    <motion.button
+                                        key={cat.key}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.3 + i * 0.03, type: "spring", stiffness: 300, damping: 20 }}
+                                        whileHover={{ scale: 1.05, y: -2 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => setActiveCategory(cat.key)}
+                                        className="flex flex-col items-center gap-1.5 shrink-0"
+                                    >
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${isActive
+                                            ? "bg-primary text-white shadow-lg shadow-primary/25"
+                                            : "bg-surface-50 text-surface-400 hover:bg-surface-100"
+                                            }`}
+                                        >
+                                            <IconComp size={20} strokeWidth={2} />
+                                        </div>
+                                        <span className={`text-[10px] font-semibold transition-colors ${isActive ? "text-primary" : "text-surface-400"}`}>
+                                            {cat.label}
+                                        </span>
+                                    </motion.button>
+                                );
+                            })}
                         </div>
                     </motion.div>
 
-                    {/* Featured Banner */}
+                    {/* Featured Banner — generic marketplace */}
                     <motion.section
                         custom={1}
                         variants={fadeUp}
@@ -135,11 +158,11 @@ export default function CustomerDiscovery() {
                         className="rounded-2xl h-48 md:h-56 relative overflow-hidden group"
                     >
                         <img
-                            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=1200"
+                            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&q=80&w=1200"
                             className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2000ms]"
-                            alt="Featured"
+                            alt="Local marketplace"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -152,11 +175,11 @@ export default function CustomerDiscovery() {
                                 transition={{ delay: 0.6 }}
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary rounded-md text-[9px] font-semibold uppercase tracking-wider"
                             >
-                                <Star size={10} fill="currentColor" strokeWidth={0} />
-                                Featured Today
+                                <Sparkles size={10} fill="currentColor" strokeWidth={0} />
+                                Your Neighbourhood
                             </motion.div>
-                            <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">Authentic Mughlai Street Flavors</h2>
-                            <p className="text-white/60 text-xs max-w-sm">Experience the legendary spice blends of Kanpur&apos;s most celebrated street artisan.</p>
+                            <h2 className="text-xl md:text-2xl font-bold tracking-tight leading-tight">Every Local Shop, One Tap Away</h2>
+                            <p className="text-white/60 text-xs max-w-sm">From tailors to grocers, chai stalls to repair shops — discover & support vendors around you.</p>
                         </motion.div>
                     </motion.section>
 
@@ -164,7 +187,7 @@ export default function CustomerDiscovery() {
                     <div className="grid grid-cols-3 gap-3">
                         {[
                             { val: "0", label: "Shops Nearby", color: "" },
-                            { val: "--", label: "Avg. Value", color: "" },
+                            { val: "10+", label: "Categories", color: "" },
                             { val: "Live", label: "Market Status", color: "text-primary" },
                         ].map((stat, i) => (
                             <motion.div
@@ -184,7 +207,7 @@ export default function CustomerDiscovery() {
 
                     {/* Trending Searches */}
                     <motion.section custom={5} variants={fadeUp} initial="hidden" animate="visible" className="space-y-2.5">
-                        <h3 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">Trending</h3>
+                        <h3 className="text-[11px] font-semibold text-surface-400 uppercase tracking-wider ml-0.5">Popular Searches</h3>
                         <motion.div
                             variants={staggerContainer}
                             initial="hidden"
@@ -197,6 +220,7 @@ export default function CustomerDiscovery() {
                                     variants={chipVariant}
                                     whileHover={{ scale: 1.08, y: -1 }}
                                     whileTap={{ scale: 0.95 }}
+                                    onClick={() => setSearchQuery(tag)}
                                     className="px-3 py-1.5 bg-surface-50 hover:bg-surface-100 rounded-lg text-xs font-medium text-surface-500 hover:text-primary transition-colors"
                                 >
                                     {tag}
@@ -254,10 +278,10 @@ export default function CustomerDiscovery() {
                                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                                     className="w-14 h-14 bg-surface-50 rounded-2xl flex items-center justify-center text-surface-300 mb-4"
                                 >
-                                    <Utensils size={24} />
+                                    <Store size={24} />
                                 </motion.div>
-                                <p className="font-semibold text-sm text-surface-900 mb-1">No vendors nearby</p>
-                                <p className="text-sm text-surface-400 max-w-xs">Local shops will appear here when they&apos;re active. Check back during peak hours.</p>
+                                <p className="font-semibold text-sm text-surface-900 mb-1">No vendors nearby yet</p>
+                                <p className="text-sm text-surface-400 max-w-xs">Local shops &amp; services will appear here once they join. Check back soon!</p>
                             </motion.div>
                         )}
                     </motion.section>
